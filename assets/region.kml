@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<kml xmlns="http://www.opengis.net/kml/2.2">
+<Document id="root_doc">
+<Schema name="region" id="region">
+	<SimpleField name="id" type="float"></SimpleField>
+</Schema>
+<Folder><name>region</name>
+  <Placemark>
+	<Style><LineStyle><color>ff0000ff</color></LineStyle><PolyStyle><fill>0</fill></PolyStyle></Style>
+	<ExtendedData><SchemaData schemaUrl="#region">
+		<SimpleData name="id">1</SimpleData>
+	</SchemaData></ExtendedData>
+      <Polygon><outerBoundaryIs><LinearRing><coordinates>-35.1484659956932,-8.92654289924274 -34.8947230993916,-9.02813343525328 -35.0571185530246,-9.33406750600041 -35.2844721881108,-9.19716460935913 -35.2134241771464,-9.02679690275355 -35.1484659956932,-8.98603028559121 -35.1484659956932,-8.92654289924274</coordinates></LinearRing></outerBoundaryIs></Polygon>
+  </Placemark>
+</Folder>
+</Document></kml>

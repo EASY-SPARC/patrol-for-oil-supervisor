@@ -33,7 +33,7 @@ model_robot_fb = app.model('Robot feedback params',
 
 t_g = 3 * 60
 
-simulation = Simulation(t_g, 'assets/region_of_interest.kml' 111)
+simulation = Simulation(t_g, 'assets/region.kml' 111)
 simulation.start()
 
 @ns_robot_fb.route("/")
