@@ -14,26 +14,20 @@ app = Api(app = flask_app,
 		  title = "Patrol for oil", 
 		  description = "Service for the patrol for oil application.")
 
-ns_robot_fb = app.namespace('Robot feedback', description='Robot feedback APIs')
+ns_robot_fb = app.namespace('robot_fb', description='Robot feedback APIs')
+ns_kde = app.namespace('kde', description='Kernel Density Estimation APIs')
 
-model_robot_fb = app.model('Robot feedback params', 
-				  {'xgrid': fields.String(required = True, 
-				  							   description="x robot position", 
-    					  				 	   help="Can not be blank")},
-				  {'ygrid': fields.String(required = True, 
-				  							   description="y robot position", 
-    					  				 	   help="Can not be blank")},
-				  {'lon': fields.String(required = False, 
-				  							   description="lon coordinates for sensed oil particles", 
-    					  				 	   help="Can be blank")},
-				  {'lat': fields.String(required = False, 
-				  							   description="lat coordinates for sensed oil particles", 
-    					  				 	   help="Can be blank")})
+model_robot_fb = app.model('Robot feedback params', {
+		'xgrid': fields.String(required = True, description="x robot position", help="Can not be blank"),
+		'ygrid': fields.String(required = True, description="y robot position", help="Can not be blank"),
+		'lon': fields.String(required = False, description="lon coordinates for sensed oil particles", help="Can be blank"),
+		'lat': fields.String(required = False, description="lat coordinates for sensed oil particles",  help="Can be blank")
+	})
 
 
 t_g = 3 * 60
 
-simulation = Simulation(t_g, 'assets/region.kml' 111)
+simulation = Simulation(t_g, 'assets/region.kml', 111)
 simulation.start()
 
 @ns_robot_fb.route("/")
@@ -80,5 +74,5 @@ class MainClass(Resource):
 		kde = simulation.get_kde()
 		return jsonify({
 				"statusCode": 200,
-				"status": "ok"
+				"kde": kde.tolist()
 			})

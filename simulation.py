@@ -3,18 +3,8 @@ from gnome_interface import GnomeInterface
 from datetime import datetime, timedelta
 
 import numpy as np
-from matplotlib import path
 from fastkml import kml
-
-def inpolygon(xq, yq, xv, yv):
-    shape = xq.shape
-    xq = xq.reshape(-1)
-    yq = yq.reshape(-1)
-    xv = xv.reshape(-1)
-    yv = yv.reshape(-1)
-    q = [(xq[i], yq[i]) for i in range(xq.shape[0])]
-    p = path.Path([(xv[i], yv[i]) for i in range(xv.shape[0])])
-    return p.contains_points(q).reshape(shape)
+from shapely import geometry
 
 class Simulation(object):
     def __init__(self, interval, region, res_grid):
@@ -39,23 +29,23 @@ class Simulation(object):
         coords = np.array(regionPolygon.exterior.coords)
 
         # Create grid maps based on region boundaries
-        self.width = np.ceil(res_grid * (maxLon - minLon))
-        self.height = np.ceil(res_grid * (maxLat - minLat))
+        self.width = int(np.ceil(res_grid * (maxLon - minLon)))
+        self.height = int(np.ceil(res_grid * (maxLat - minLat)))
         
-        self._mask = np.zeros((self.height, self.width))
-        self._dist_grid = np.zeros((self.height, self.width))
+        self.mask = np.zeros((self.height, self.width))
+        self.dist_grid = np.zeros((self.height, self.width))
 
         for i in range(self.width):
             for j in range(self.height):
-                if inpolygon((i/res_grid) + minLon, (j/res_grid) + minLat, coords[:, 0], coords[:, 1]) == False:
-                    self._mask(j, i) = 1
+                if regionPolygon.intersects(geometry.Point((i/res_grid) + minLon, (j/res_grid) + minLat)) == False:
+                    self.mask[j, i] = 1
                 else:
-                    #self._dist_grid(j, i) = res_grid * 
+                    #self.dist_grid(j, i) = res_grid * 
                     pass
         
-        self._kde = self._compute_kde()
-        #max_dist=max(max(self._dist_grid))
-        #self._dist_grid = 1/max_dist*5*(~self.mask.*max_dist-self._dist_grid)+self._kde
+        self.kde = self._compute_kde()
+        #max_dist=max(max(self.dist_grid))
+        #self.dist_grid = 1/max_dist*5*(~self.mask.*max_dist-self.dist_grid)+self._kde
 
 
     def _run(self):
@@ -63,12 +53,11 @@ class Simulation(object):
         self.start()
         
         # Cyclic code here
-        [lon, lat] = self._gnome.step(datetime(2020, 9, 15, 12, 0, 0), False)
-        self._kde = self._compute_kde(lon, lat)
+        #[lon, lat] = self._gnome.step(datetime(2020, 9, 15, 12, 0, 0), False)
+        #self._kde = self._compute_kde(lon, lat)
 
     def _compute_kde(self, lon=None, lat=None):
-        kde = np.NINF * self._mask # No Fly Zones cells are -inf valued
-        kde = np.where(np.isnan(kde), 0, kde) # force numpy's -inf * 0 = 0, instead of nan
+        kde = -1 * self.mask # No Fly Zones cells are -1 valued
 
         if (lon is not None) and (lat is not None):
             # h = ...
@@ -82,8 +71,8 @@ class Simulation(object):
     def robot_feedback(self, xgrid, ygrid, lon, lat):
         pass # remove
 
-    def get_kde():
-        return self._kde
+    def get_kde(self):
+        return self.kde
 
     def start(self):
         if not self.is_running:
