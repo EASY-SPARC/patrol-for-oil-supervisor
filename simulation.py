@@ -2,19 +2,23 @@ from threading import Timer
 from gnome_interface import GnomeInterface
 from datetime import datetime, timedelta
 
+from scipy.stats import gaussian_kde
+
 import numpy as np
 from fastkml import kml
 from shapely import geometry
 
+KDE_BW = 0.2    # KDE Bandwidth
+RES_GRID = 111  # Grid resolution (km in each cell)
+
 class Simulation(object):
-    def __init__(self, interval, region, res_grid):
+    def __init__(self, interval, region):
+
         self._timer     = None
         self.interval   = interval
         self.is_running = False
         self.start()
         
-        res_grid = float(res_grid)
-
         # Instance for gnome interface
         self._gnome = GnomeInterface()
 
@@ -29,23 +33,25 @@ class Simulation(object):
         coords = np.array(regionPolygon.exterior.coords)
 
         # Create grid maps based on region boundaries
-        self.width = int(np.ceil(res_grid * (maxLon - minLon)))
-        self.height = int(np.ceil(res_grid * (maxLat - minLat)))
+        self.width = int(np.ceil(RES_GRID * (maxLon - minLon)))
+        self.height = int(np.ceil(RES_GRID * (maxLat - minLat)))
         
         self.mask = np.zeros((self.height, self.width))
         self.dist_grid = np.zeros((self.height, self.width))
 
         for i in range(self.width):
             for j in range(self.height):
-                if regionPolygon.intersects(geometry.Point((i/res_grid) + minLon, (j/res_grid) + minLat)) == False:
+                if regionPolygon.intersects(geometry.Point((i/RES_GRID) + minLon, (j/RES_GRID) + minLat)) == False:
                     self.mask[j, i] = 1
                 else:
-                    #self.dist_grid(j, i) = res_grid * 
+                    #self.dist_grid(j, i) = RES_GRID * 
                     pass
         
         self.kde = self._compute_kde()
         #max_dist=max(max(self.dist_grid))
         #self.dist_grid = 1/max_dist*5*(~self.mask.*max_dist-self.dist_grid)+self._kde
+
+        self.mask_idx = np.argwhere(self.mask.T == 0) # indexes of cells inside polygon
 
 
     def _run(self):
@@ -60,9 +66,17 @@ class Simulation(object):
         kde = -1 * self.mask # No Fly Zones cells are -1 valued
 
         if (lon is not None) and (lat is not None):
-            # h = ...
-            # f = ...
-            #kde = 5/np.max(f) * np.logical_not(mask) * f * (h>0) + kde;
+            h, yEdges, xEdges = np.histogram2d(lat, lon, bins=[self.height, self.width])
+
+            xls = np.mean(np.array([xEdges[1:-2], xEdges[2:-1]]), axis=0)
+            yls = np.mean(np.array([yEdges[1:-2], yEdges[2:-1]]), axis=0)
+            xx, yy = np.meshgrid(xls, yls)
+
+            positions = np.vstack([xx.T.ravel(), yy.T.ravel()]).T
+
+            f = gaussian_kde()
+            f_values = f.evaluate(positions).reshape(self.kde.shape)
+            #kde = 5/np.max(f) * (1 - mask) * f * (h>0) + kde;
             pass # remove
 
 
