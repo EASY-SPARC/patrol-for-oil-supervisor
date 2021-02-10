@@ -8,8 +8,8 @@ import numpy as np
 from fastkml import kml
 from shapely import geometry
 
-KDE_BW = 0.2    # KDE Bandwidth
-RES_GRID = 111  # Grid resolution (km in each cell)
+KDE_BW = 0.2        # KDE Bandwidth
+RES_GRID = 111.0    # Grid resolution (km in each cell)
 
 class Simulation(object):
     def __init__(self, interval, region):
@@ -53,7 +53,6 @@ class Simulation(object):
 
         self.mask_idx = np.argwhere(self.mask.T == 0) # indexes of cells inside polygon
 
-
     def _run(self):
         self.is_running = False
         self.start()
@@ -74,10 +73,9 @@ class Simulation(object):
 
             positions = np.vstack([xx.T.ravel(), yy.T.ravel()]).T
 
-            f = gaussian_kde()
-            f_values = f.evaluate(positions).reshape(self.kde.shape)
-            #kde = 5/np.max(f) * (1 - mask) * f * (h>0) + kde;
-            pass # remove
+            #f = gaussian_kde()
+            #f_values = f.evaluate(positions).reshape(self.kde.shape)
+            #kde = 5/np.max(f) * (1 - mask) * f * (h>0) + kde
 
 
         return kde
