@@ -47,19 +47,22 @@ class Simulation(object):
                     #self.dist_grid(j, i) = RES_GRID * 
                     pass
         
-        self.kde = self._compute_kde()
+        self.mask_idx = np.argwhere(self.mask.T == 0) # indexes of cells inside polygon
+
+        #self._gnome.step(datetime(2020, 9, 15, 12, 0, 0), False)
+        lon, lat = self._gnome.get_particles()
+        self.kde = self._compute_kde(lon, lat)
         #max_dist=max(max(self.dist_grid))
         #self.dist_grid = 1/max_dist*5*(~self.mask.*max_dist-self.dist_grid)+self._kde
-
-        self.mask_idx = np.argwhere(self.mask.T == 0) # indexes of cells inside polygon
 
     def _run(self):
         self.is_running = False
         self.start()
         
         # Cyclic code here
-        lon, lat = self._gnome.step(datetime(2020, 9, 15, 12, 0, 0), False)
-        self._kde = self._compute_kde(lon, lat)
+        self._gnome.step(datetime(2020, 9, 15, 12, 0, 0), False)
+        lon, lat = self._gnome.get_particles()
+        self._kde = self._compute_kde()
 
     def _compute_kde(self, lon=None, lat=None):
         kde = -1 * self.mask # No Fly Zones cells are -1 valued
@@ -73,12 +76,39 @@ class Simulation(object):
 
             positions = np.vstack([xx.T.ravel(), yy.T.ravel()]).T
 
-            #f = gaussian_kde()
-            #f_values = f.evaluate(positions).reshape(self.kde.shape)
-            #kde = 5/np.max(f) * (1 - mask) * f * (h>0) + kde
+            binX, binY = self._get_bins(lon, lat, xEdges, yEdges)
 
+            lonp = np.array([], dtype='float64')
+            latp = np.array([], dtype='float64')
+
+            for i in range(self.mask_idx.shape[0]):
+                idxs = np.where((binX == self.mask_idx[i, 0]) and (binY == self.mask_idx[i, 1]))
+                lonp = np.append(lonp, lon[idxs])
+                latp = np.append(latp, lat[idxs])
+
+            f = gaussian_kde(np.vstack([lonp.T, latp.T]).T, bw_method=KDE_BW)
+            f_values = f.evaluate(positions).reshape(self.kde.shape)
+            kde = 5/np.max(f) * (1 - mask) * f * (h>0) + kde
 
         return kde
+
+    def _get_bins(self, lon, lat, xEdges, yEdges):
+        binX = np.zeros(len(lon))
+        binY = np.zeros(len(lat))
+
+        for i in range(len(lon)):
+            for j in range(len(xEdges)-1):
+                if (lon[i] >= xEdges[j]) and (lon[i] <= xEdges[j+1]):
+                    binX[i] = j
+                    break
+
+        for i in range(len(lat)):
+            for j in range(len(yEdges)-1):
+                if (lat[i] >= yEdges[j]) and (lat[i] <= yEdges[j+1]):
+                    binY[i] = j
+                    break
+
+        return binX, binY
     
     def robot_feedback(self, xgrid, ygrid, lon, lat):
         pass # remove
