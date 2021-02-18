@@ -58,8 +58,8 @@ class Simulation(object):
         self.start()
         
         # Cyclic code here
-        #[lon, lat] = self._gnome.step(datetime(2020, 9, 15, 12, 0, 0), False)
-        #self._kde = self._compute_kde(lon, lat)
+        lon, lat = self._gnome.step(datetime(2020, 9, 15, 12, 0, 0), False)
+        self._kde = self._compute_kde(lon, lat)
 
     def _compute_kde(self, lon=None, lat=None):
         kde = -1 * self.mask # No Fly Zones cells are -1 valued

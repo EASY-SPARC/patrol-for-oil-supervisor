@@ -38,6 +38,8 @@ from gnome.outputters import NetCDFOutput
 
 from gnome import utilities
 
+import netCDF4 as nc
+
 class GnomeInterface:
     def __init__(self):
         base_dir = os.path.dirname(__file__)
@@ -97,7 +99,18 @@ class GnomeInterface:
 
         model.full_run()
 
-        #for step in model:
-        #    print "step: %.4i -- memuse: %fMB" % (step['step_num'], utilities.get_mem_use())
+        # read nc and prepare particles lat lon
+        data = nc.Dataset(netcdf_file)
+        lon = np.array(data['longitude'][:])
+        lat = np.array(data['latitude'][:])
+        status_codes = np.array(data['status_codes'][:]) #'0: not_released, 2: in_water, 3: on_land, 7: off_maps, 10: evaporated, 12: to_be_removed, 32: on_tideflat,'
+        pc = np.array(data['particle_count'][:]) #'1-number of particles in a given timestep'
+        
+        lon = lon[len(lon) - pc[-1]:len(lon)]
+        lat = lat[len(lat) - pc[-1]:len(lat)]
+        status_codes = status_codes[len(status_codes) - pc[-1]:len(status_codes)]
 
-        return [0, 0]
+        lon = lon(np.where(status_codes == 2))
+        lat = lon(np.where(status_codes == 2))
+
+        return lon, lat
