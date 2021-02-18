@@ -95,7 +95,9 @@ class GnomeInterface:
         scripting.remove_netcdf(netcdf_file)
         model.outputters += NetCDFOutput(netcdf_file, which_data='standard', surface_conc='kde')
 
-        for step in model:
-            print "step: %.4i -- memuse: %fMB" % (step['step_num'], utilities.get_mem_use())
+        model.full_run()
+
+        #for step in model:
+        #    print "step: %.4i -- memuse: %fMB" % (step['step_num'], utilities.get_mem_use())
 
         return [0, 0]
