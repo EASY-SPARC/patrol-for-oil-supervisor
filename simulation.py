@@ -48,8 +48,7 @@ class Simulation(object):
                     pass
         
         self.mask_idx = np.argwhere(self.mask.T == 0) # indexes of cells inside polygon
-
-        #self._gnome.step(datetime(2020, 9, 15, 12, 0, 0), False)
+        self._gnome.step(datetime(2020, 9, 15, 12, 0, 0), False)
         lon, lat = self._gnome.get_particles()
         self.kde = self._compute_kde(lon, lat)
         #max_dist=max(max(self.dist_grid))
@@ -62,39 +61,47 @@ class Simulation(object):
         # Cyclic code here
         self._gnome.step(datetime(2020, 9, 15, 12, 0, 0), False)
         lon, lat = self._gnome.get_particles()
-        self._kde = self._compute_kde()
+        self._kde = self._compute_kde(lon, lat)
 
     def _compute_kde(self, lon=None, lat=None):
+        print('Computing new KDE')
         kde = -1 * self.mask # No Fly Zones cells are -1 valued
 
         if (lon is not None) and (lat is not None):
             h, yEdges, xEdges = np.histogram2d(lat, lon, bins=[self.height, self.width])
 
-            xls = np.mean(np.array([xEdges[1:-2], xEdges[2:-1]]), axis=0)
-            yls = np.mean(np.array([yEdges[1:-2], yEdges[2:-1]]), axis=0)
+            xls = np.mean(np.array([xEdges[0:-1], xEdges[1:]]), axis=0)
+            yls = np.mean(np.array([yEdges[0:-1], yEdges[1:]]), axis=0)
             xx, yy = np.meshgrid(xls, yls)
 
-            positions = np.vstack([xx.T.ravel(), yy.T.ravel()]).T
+            #positions = np.vstack([xx.T.ravel(), yy.T.ravel()]).T
+            positions = np.vstack([xx.ravel(), yy.ravel()])
 
             binX, binY = self._get_bins(lon, lat, xEdges, yEdges)
 
             lonp = np.array([], dtype='float64')
             latp = np.array([], dtype='float64')
 
+            # Find which particles are inside the polygon (need optimization -- Too slow)
             for i in range(self.mask_idx.shape[0]):
-                idxs = np.where((binX == self.mask_idx[i, 0]) and (binY == self.mask_idx[i, 1]))
-                lonp = np.append(lonp, lon[idxs])
-                latp = np.append(latp, lat[idxs])
+                for j in range(len(binX)):
+                    if (binX[j] == self.mask_idx[i, 0]) and (binY[j] == self.mask_idx[i, 1]):
+                        lonp = np.append(lonp, lon[j])
+                        latp = np.append(latp, lat[j])
+                #idxs = np.where((binX == self.mask_idx[i, 0]) and (binY == self.mask_idx[i, 1]))
+                #lonp = np.append(lonp, lon[idxs])
+                #latp = np.append(latp, lat[idxs])
 
-            f = gaussian_kde(np.vstack([lonp.T, latp.T]).T, bw_method=KDE_BW)
-            f_values = f.evaluate(positions).reshape(self.kde.shape)
-            kde = 5/np.max(f) * (1 - mask) * f * (h>0) + kde
+            f = gaussian_kde(np.vstack([lonp, latp]), bw_method=KDE_BW)
+            f_values = f.evaluate(positions).reshape(kde.shape)
+            kde = 5/np.max(f_values) * (1 - self.mask) * f_values * (h>0) + kde
+            print('Computed new KDE')
 
         return kde
 
     def _get_bins(self, lon, lat, xEdges, yEdges):
-        binX = np.zeros(len(lon))
-        binY = np.zeros(len(lat))
+        binX = np.zeros(len(lon), dtype='int')
+        binY = np.zeros(len(lat), dtype='int')
 
         for i in range(len(lon)):
             for j in range(len(xEdges)-1):

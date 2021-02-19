@@ -52,6 +52,7 @@ class GnomeInterface:
 
         
     def step(self, start_time, new_particles):
+        print('Computing new gnome step')
         base_dir = os.path.dirname(__file__)
 
         model = Model(start_time=start_time, 
@@ -97,9 +98,11 @@ class GnomeInterface:
         scripting.remove_netcdf(netcdf_file)
         model.outputters += NetCDFOutput(netcdf_file, which_data='standard', surface_conc='kde')
 
-        #for step in model:
-        #    print "step: %.4i -- memuse: %fMB" % (step['step_num'], utilities.get_mem_use())
-        model.full_run()
+        for step in model:
+            pass
+            #print "step: %.4i -- memuse: %fMB" % (step['step_num'], utilities.get_mem_use())
+        #model.full_run()
+        print('Computed new gnome step')
 
     def get_particles(self):
         base_dir = os.path.dirname(__file__)
