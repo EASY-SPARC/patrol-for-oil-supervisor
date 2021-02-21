@@ -29,19 +29,19 @@ class Simulation(object):
         regionKML = kml.KML()
         regionKML.from_string(regionString)
         regionPolygon = list(list(list(regionKML.features())[0].features())[0].features())[0].geometry
-        (minLon, minLat, maxLon, maxLat) = regionPolygon.bounds
+        (self.minLon, self.minLat, self.maxLon, self.maxLat) = regionPolygon.bounds
         coords = np.array(regionPolygon.exterior.coords)
 
         # Create grid maps based on region boundaries
-        self.width = int(np.ceil(RES_GRID * (maxLon - minLon)))
-        self.height = int(np.ceil(RES_GRID * (maxLat - minLat)))
+        self.width = int(np.ceil(RES_GRID * (self.maxLon - self.minLon)))
+        self.height = int(np.ceil(RES_GRID * (self.maxLat - self.minLat)))
         
         self.mask = np.zeros((self.height, self.width))
         self.dist_grid = np.zeros((self.height, self.width))
 
         for i in range(self.width):
             for j in range(self.height):
-                if regionPolygon.intersects(geometry.Point((i/RES_GRID) + minLon, (j/RES_GRID) + minLat)) == False:
+                if regionPolygon.intersects(geometry.Point((i/RES_GRID) + self.minLon, (j/RES_GRID) + self.minLat)) == False:
                     self.mask[j, i] = 1
                 else:
                     #self.dist_grid(j, i) = RES_GRID * 
@@ -49,8 +49,27 @@ class Simulation(object):
         
         self.mask_idx = np.argwhere(self.mask.T == 0) # indexes of cells inside polygon
         self._gnome.step(datetime(2020, 9, 15, 12, 0, 0), False)
+
         lon, lat = self._gnome.get_particles()
-        self.kde = self._compute_kde(lon, lat)
+
+        I1 = np.where(lon >= self.minLon)
+        lonI = lon[I1]
+        latI = lat[I1]
+
+        I2 = np.where(lonI <= self.maxLon)
+        lonI = lonI[I2]
+        latI = latI[I2]
+
+        I3 = np.where(latI >= self.minLat)
+        lonI = lonI[I3]
+        latI = latI[I3]
+
+        I4 = np.where(latI <= self.maxLat)
+        lonI = lonI[I4]
+        latI = latI[I4]
+
+        self.kde = self._compute_kde(lonI, latI)
+
         #max_dist=max(max(self.dist_grid))
         #self.dist_grid = 1/max_dist*5*(~self.mask.*max_dist-self.dist_grid)+self._kde
 
@@ -60,15 +79,33 @@ class Simulation(object):
         
         # Cyclic code here
         self._gnome.step(datetime(2020, 9, 15, 12, 0, 0), False)
+
         lon, lat = self._gnome.get_particles()
-        self._kde = self._compute_kde(lon, lat)
+
+        I1 = np.where(lon >= self.minLon)
+        lonI = lon[I1]
+        latI = lat[I1]
+
+        I2 = np.where(lonI <= self.maxLon)
+        lonI = lonI[I2]
+        latI = latI[I2]
+
+        I3 = np.where(latI >= self.minLat)
+        lonI = lonI[I3]
+        latI = latI[I3]
+
+        I4 = np.where(latI <= self.maxLat)
+        lonI = lonI[I4]
+        latI = latI[I4]
+
+        self._kde = self._compute_kde(lonI, latI)
 
     def _compute_kde(self, lon=None, lat=None):
         print('Computing new KDE')
         kde = -1 * self.mask # No Fly Zones cells are -1 valued
 
         if (lon is not None) and (lat is not None):
-            h, yEdges, xEdges = np.histogram2d(lat, lon, bins=[self.height, self.width])
+            h, yEdges, xEdges = np.histogram2d(x=lat, y=lon, bins=[self.height, self.width])
 
             xls = np.mean(np.array([xEdges[0:-1], xEdges[1:]]), axis=0)
             yls = np.mean(np.array([yEdges[0:-1], yEdges[1:]]), axis=0)
