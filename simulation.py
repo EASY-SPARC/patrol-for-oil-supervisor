@@ -70,8 +70,8 @@ class Simulation(object):
 
         self.kde = self._compute_kde(lonI, latI)
 
-        #max_dist=max(max(self.dist_grid))
-        #self.dist_grid = 1/max_dist*5*(~self.mask.*max_dist-self.dist_grid)+self._kde
+        #max_dist=np.max(self.dist_grid)
+        #self.dist_grid = 1/max_dist * 5 * ((1 - self.mask) * max_dist - self.dist_grid) + (1 - self.mask)
 
     def _run(self):
         self.is_running = False
