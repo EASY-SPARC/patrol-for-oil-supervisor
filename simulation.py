@@ -98,8 +98,8 @@ class Simulation(object):
         lonI = lonI[I4]
         latI = latI[I4]
 
-        self._kde = self._compute_kde(lonI, latI)
-
+        self.kde = self._compute_kde(lonI, latI)
+        
     def _compute_kde(self, lon=None, lat=None):
         print('Computing new KDE')
         kde = -1 * self.mask # No Fly Zones cells are -1 valued
