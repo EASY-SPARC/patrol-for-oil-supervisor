@@ -7,6 +7,7 @@ from scipy.stats import gaussian_kde
 import numpy as np
 from fastkml import kml
 from shapely import geometry
+import shapefile
 
 KDE_BW = 0.2        # KDE Bandwidth
 RES_GRID = 111.0    # Grid resolution (km in each cell)
@@ -39,13 +40,20 @@ class Simulation(object):
         self.mask = np.zeros((self.height, self.width))
         self.dist_grid = np.zeros((self.height, self.width))
 
+        # Read shape file
+        shpfile = shapefile.Reader('./assets/shp/BRA_admin_AL.shp')
+        feature = shpfile.shapeRecords()[0]
+        first = feature.shape.__geo_interface__
+        shp = geometry.shape(first)
+        al_coords = np.array(shp.geoms[3].exterior.coords)
+
         for i in range(self.width):
             for j in range(self.height):
                 if regionPolygon.intersects(geometry.Point((i/RES_GRID) + self.minLon, (j/RES_GRID) + self.minLat)) == False:
                     self.mask[j, i] = 1
                 else:
-                    #self.dist_grid(j, i) = RES_GRID * 
-                    pass
+                    dist = np.sqrt(((i/RES_GRID) + self.minLon - al_coords[:, 0])**2 + ((j/RES_GRID) + self.minLat - al_coords[:, 1])**2)
+                    self.dist_grid[j, i] = RES_GRID * np.min(dist)
         
         self.mask_idx = np.argwhere(self.mask.T == 0) # indexes of cells inside polygon
         self._gnome.step(datetime(2020, 9, 15, 12, 0, 0), False)
@@ -70,8 +78,8 @@ class Simulation(object):
 
         self.kde = self._compute_kde(lonI, latI)
 
-        #max_dist=np.max(self.dist_grid)
-        #self.dist_grid = 1/max_dist * 5 * ((1 - self.mask) * max_dist - self.dist_grid) + (1 - self.mask)
+        max_dist = np.max(self.dist_grid)
+        self.dist_grid = 1/max_dist * 5 * ((1 - self.mask) * max_dist - self.dist_grid) + (-self.mask)
 
     def _run(self):
         self.is_running = False
@@ -159,6 +167,9 @@ class Simulation(object):
 
     def get_kde(self):
         return self.kde
+
+    def get_env_sensibility(self):
+        return self.dist_grid
 
     def start(self):
         if not self.is_running:

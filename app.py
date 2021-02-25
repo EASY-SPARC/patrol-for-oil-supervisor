@@ -125,8 +125,8 @@ class MainClass(Resource):
 		return response
 
 	def get(self):
-		kde = simulation.get_kde()
+		env_sensibility = simulation.get_env_sensibility()
 		return jsonify({
 				"statusCode": 200,
-				"kde": kde.tolist()
+				"env_sensibility": env_sensibility.tolist()
 			})
