@@ -56,7 +56,7 @@ class Simulation(object):
                     self.dist_grid[j, i] = RES_GRID * np.min(dist)
         
         self.mask_idx = np.argwhere(self.mask.T == 0) # indexes of cells inside polygon
-        self._gnome.step(datetime(2020, 9, 15, 12, 0, 0), False)
+        self._gnome.step(datetime(2020, 9, 15, 12, 0, 0))
 
         lon, lat = self._gnome.get_particles()
 
@@ -86,7 +86,7 @@ class Simulation(object):
         self.start()
         
         # Cyclic code here
-        self._gnome.step(datetime(2020, 9, 15, 12, 0, 0), False)
+        self._gnome.step(datetime(2020, 9, 15, 12, 0, 0))
 
         lon, lat = self._gnome.get_particles()
 
@@ -164,6 +164,9 @@ class Simulation(object):
     
     def robot_feedback(self, xgrid, ygrid, lon, lat):
         pass # remove
+
+    def report_oil(self, lon, lat):
+        self._gnome.add_oil(lon, lat)
 
     def get_kde(self):
         return self.kde

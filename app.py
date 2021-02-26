@@ -50,7 +50,14 @@ class MainClass(Resource):
 	def post(self):
 		try: 
 			formData = request.json
-			simulation.robot_feedback(formData['xgrid'], formData['ygrid'], formData['lon'], formData['lat'])
+			xgrid = int(formData['xgrid'])
+			ygrid = int(formData['ygrid'])
+			if formData['lon'] != '':
+				lon = np.fromstring(formData['lon'].replace('[', '').replace(']', ''), dtype=float, sep=',')
+			if formData['lat'] != '':
+				lat = np.fromstring(formData['lat'].replace('[', '').replace(']', ''), dtype=float, sep=',')
+
+			simulation.robot_feedback(xgrid, ygrid, lon, lat)
 			
 			response = jsonify({
 				"statusCode": 200,
@@ -80,11 +87,13 @@ class MainClass(Resource):
 	def post(self):
 		try: 
 			formData = request.json
-			simulation.robot_feedback(formData['xgrid'], formData['ygrid'], formData['lon'], formData['lat'])
+			lon = np.fromstring(formData['lon'].replace('[', '').replace(']', ''), dtype=float, sep=',')
+			lat = np.fromstring(formData['lat'].replace('[', '').replace(']', ''), dtype=float, sep=',')
+			simulation.report_oil(lon, lat)
 			
 			response = jsonify({
 				"statusCode": 200,
-				"status": "Robot feedback applied",
+				"status": "Oil report registered",
 				"result": "ok"
 				})			
 			response.headers.add('Access-Control-Allow-Origin', '*')
@@ -92,7 +101,7 @@ class MainClass(Resource):
 		except Exception as error:
 			return jsonify({
 				"statusCode": 500,
-				"status": "Could not apply robot feedback",
+				"status": "Could not apply oil report",
 				"error": str(error)
 			})
 

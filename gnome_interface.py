@@ -49,9 +49,11 @@ class GnomeInterface:
         oil_name = 'GENERIC MEDIUM CRUDE'
         wd = UniformDistribution(low=.0002, high=.0002)
         self.subs = GnomeOil(oil_name,initializers=plume_initializers(distribution=wd))
+        
+        self.new_oil = []
 
         
-    def step(self, start_time, new_particles):
+    def step(self, start_time):
         print('Computing new gnome step')
         base_dir = os.path.dirname(__file__)
 
@@ -62,17 +64,20 @@ class GnomeInterface:
             uncertain=False,
             cache_enabled=False)
         
+        # Add reported oil (at current time)
+        if len(self.new_oil) > 0:
+            for oil in self.new_oil:
+                release = SpartialRelease(release_time=start_time, start_position=oil)
+                model.spills += Spill(release=release, substance=self.subs)
+            self.new_oil = []
 
-        if (new_particles):
-            release = release_from_splot_data(start_time, './assets/contiguous.txt')
-            model.spills += Spill(release=release, substance=self.subs)
-
+        # Add already present oil particles
         try:
             f = open('./assets/step.txt')
             f.close()
-            release2 = release_from_splot_data(start_time,
+            release = release_from_splot_data(start_time,
                                             './assets/step.txt')
-            model.spills += Spill(release=release2, substance=self.subs)        
+            model.spills += Spill(release=release, substance=self.subs)        
         except IOError:
             pass
 
@@ -94,7 +99,7 @@ class GnomeInterface:
         renderer.viewport = ((-35.5, -9.5), (-34, -8.5)) #1/4 N alagoas
         model.outputters += renderer
 
-        netcdf_file = os.path.join(base_dir, 'step.nc')
+        netcdf_file = os.path.join(base_dir, './assets/step.nc')
         scripting.remove_netcdf(netcdf_file)
         model.outputters += NetCDFOutput(netcdf_file, which_data='standard', surface_conc='kde')
 
@@ -106,7 +111,7 @@ class GnomeInterface:
 
     def get_particles(self):
         base_dir = os.path.dirname(__file__)
-        netcdf_file = os.path.join(base_dir, 'step.nc')
+        netcdf_file = os.path.join(base_dir, './assets/step.nc')
         # read nc and prepare particles lat lon
         data = nc.Dataset(netcdf_file)
         lon = np.array(data['longitude'][:])
@@ -122,4 +127,8 @@ class GnomeInterface:
         lat = lat[np.where(status_codes == 2)]
 
         return lon, lat
+    
+    def add_oil(self, lon, lat):
+        oil = np.array([[lon[i], lat[i]] for i in range(len(lon))])
+        self.new_oil.append(oil)
 
