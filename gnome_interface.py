@@ -132,3 +132,8 @@ class GnomeInterface:
         oil = np.array([[lon[i], lat[i]] for i in range(len(lon))])
         self.new_oil.append(oil)
 
+    def save_particles(self, lon, lat):
+        particles = np.array([[lon[i], lat[i], 1] for i in range(len(lon))])
+        np.savetxt('./assets/step.txt', particles)
+
+
