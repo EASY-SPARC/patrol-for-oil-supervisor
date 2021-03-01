@@ -58,23 +58,25 @@ class Simulation(object):
         self.mask_idx = np.argwhere(self.mask.T == 0) # indexes of cells inside polygon
         self._gnome.step(datetime(2020, 9, 15, 12, 0, 0))
 
-        lon, lat = self._gnome.get_particles()
+        self.lon, self.lat = self._gnome.get_particles()
 
-        I1 = np.where(lon >= self.minLon)
-        lonI = lon[I1]
-        latI = lat[I1]
+        I1 = np.where(self.lon >= self.minLon)[0]
+        lonI = self.lon[I1]
+        latI = self.lat[I1]
 
-        I2 = np.where(lonI <= self.maxLon)
+        I2 = np.where(lonI <= self.maxLon)[0]
         lonI = lonI[I2]
         latI = latI[I2]
 
-        I3 = np.where(latI >= self.minLat)
+        I3 = np.where(latI >= self.minLat)[0]
         lonI = lonI[I3]
         latI = latI[I3]
 
-        I4 = np.where(latI <= self.maxLat)
+        I4 = np.where(latI <= self.maxLat)[0]
         lonI = lonI[I4]
         latI = latI[I4]
+
+        self.idx = I1[I2[I3[I4]]]
 
         self.kde = self._compute_kde(lonI, latI)
 
@@ -86,25 +88,29 @@ class Simulation(object):
         self.start()
         
         # Cyclic code here
+        self._gnome.save_particles(self.lon, self.lat)
+
         self._gnome.step(datetime(2020, 9, 15, 12, 0, 0))
 
-        lon, lat = self._gnome.get_particles()
+        self.lon, self.lat = self._gnome.get_particles()
 
-        I1 = np.where(lon >= self.minLon)
-        lonI = lon[I1]
-        latI = lat[I1]
+        I1 = np.where(self.lon >= self.minLon)[0]
+        lonI = self.lon[I1]
+        latI = self.lat[I1]
 
-        I2 = np.where(lonI <= self.maxLon)
+        I2 = np.where(lonI <= self.maxLon)[0]
         lonI = lonI[I2]
         latI = latI[I2]
 
-        I3 = np.where(latI >= self.minLat)
+        I3 = np.where(latI >= self.minLat)[0]
         lonI = lonI[I3]
         latI = latI[I3]
 
-        I4 = np.where(latI <= self.maxLat)
+        I4 = np.where(latI <= self.maxLat)[0]
         lonI = lonI[I4]
         latI = latI[I4]
+
+        self.idx = I1[I2[I3[I4]]]
 
         self.kde = self._compute_kde(lonI, latI)
         
@@ -129,18 +135,23 @@ class Simulation(object):
 
             # Find which particles are inside the polygon (need optimization -- Too slow)
             for i in range(self.mask_idx.shape[0]):
-                for j in range(len(binX)):
-                    if (binX[j] == self.mask_idx[i, 0]) and (binY[j] == self.mask_idx[i, 1]):
-                        lonp = np.append(lonp, lon[j])
-                        latp = np.append(latp, lat[j])
-                #idxs = np.where((binX == self.mask_idx[i, 0]) and (binY == self.mask_idx[i, 1]))
-                #lonp = np.append(lonp, lon[idxs])
-                #latp = np.append(latp, lat[idxs])
+                #for j in range(len(binX)):
+                #    if (binX[j] == self.mask_idx[i, 0]) and (binY[j] == self.mask_idx[i, 1]):
+                #        lonp = np.append(lonp, lon[j])
+                #        latp = np.append(latp, lat[j])
+                idxs = np.where(np.logical_and(binX == self.mask_idx[i, 0], binY == self.mask_idx[i, 1]))[0]
+                lonp = np.append(lonp, lon[idxs])
+                latp = np.append(latp, lat[idxs])
 
             f = gaussian_kde(np.vstack([lonp, latp]), bw_method=KDE_BW)
             f_values = f.evaluate(positions).reshape(kde.shape)
             kde = 5/np.max(f_values) * (1 - self.mask) * f_values * (h>0) + kde
             print('Computed new KDE')
+
+            self.binX = binX
+            self.binY = binY
+            self.xEdges = xEdges
+            self.yEdges = yEdges
 
         return kde
 
@@ -162,8 +173,42 @@ class Simulation(object):
 
         return binX, binY
     
-    def robot_feedback(self, xgrid, ygrid, lon, lat):
-        pass # remove
+    def robot_feedback(self, xgrid, ygrid, lon=None, lat=None):
+               
+        # Consume existing particles
+        particles_idx = self.idx[np.where(np.logical_and(self.binX == xgrid, self.binY == ygrid))[0]]
+        self.lon = np.delete(self.lon, particles_idx)
+        self.lat = np.delete(self.lat, particles_idx)
+
+        # TODO Add sensed particles
+
+        # Compute new bins
+        I1 = np.where(self.lon >= self.minLon)[0]
+        lonI = self.lon[I1]
+        latI = self.lat[I1]
+
+        I2 = np.where(lonI <= self.maxLon)[0]
+        lonI = lonI[I2]
+        latI = latI[I2]
+
+        I3 = np.where(latI >= self.minLat)[0]
+        lonI = lonI[I3]
+        latI = latI[I3]
+
+        I4 = np.where(latI <= self.maxLat)[0]
+        lonI = lonI[I4]
+        latI = latI[I4]
+
+        self.idx = I1[I2[I3[I4]]]
+
+        self.binX, self.binY = self._get_bins(lonI, latI, self.xEdges, self.yEdges)
+
+        # Update kde
+        if (lon == None):
+            self.kde[ygrid, xgrid] = 0
+        else:
+            self.kde[ygrid, xgrid] = len(lon)
+
 
     def report_oil(self, lon, lat):
         self._gnome.add_oil(lon, lat)
