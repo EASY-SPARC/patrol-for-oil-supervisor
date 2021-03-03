@@ -133,7 +133,7 @@ class Simulation(object):
             lonp = np.array([], dtype='float64')
             latp = np.array([], dtype='float64')
 
-            # Find which particles are inside the polygon (need optimization -- Too slow)
+            # Find which particles are inside the polygon
             for i in range(self.mask_idx.shape[0]):
                 #for j in range(len(binX)):
                 #    if (binX[j] == self.mask_idx[i, 0]) and (binY[j] == self.mask_idx[i, 1]):
@@ -150,8 +150,6 @@ class Simulation(object):
 
             self.binX = binX
             self.binY = binY
-            self.xEdges = xEdges
-            self.yEdges = yEdges
 
         return kde
 
@@ -173,7 +171,7 @@ class Simulation(object):
 
         return binX, binY
     
-    def robot_feedback(self, xgrid, ygrid, lon=None, lat=None):
+    def robot_feedback(self, robot_id, xgrid, ygrid, lon=None, lat=None):
                
         # Consume existing particles
         particles_idx = self.idx[np.where(np.logical_and(self.binX == xgrid, self.binY == ygrid))[0]]
@@ -182,7 +180,8 @@ class Simulation(object):
 
         # TODO Add sensed particles
 
-        # Compute new bins
+
+        # Compute new global idx
         I1 = np.where(self.lon >= self.minLon)[0]
         lonI = self.lon[I1]
         latI = self.lat[I1]
@@ -201,13 +200,8 @@ class Simulation(object):
 
         self.idx = I1[I2[I3[I4]]]
 
-        self.binX, self.binY = self._get_bins(lonI, latI, self.xEdges, self.yEdges)
-
-        # Update kde
-        if (lon == None):
-            self.kde[ygrid, xgrid] = 0
-        else:
-            self.kde[ygrid, xgrid] = len(lon)
+        # Compute kde
+        self._compute_kde(lonI, latI)
 
 
     def report_oil(self, lon, lat):
@@ -218,6 +212,9 @@ class Simulation(object):
 
     def get_env_sensibility(self):
         return self.dist_grid
+
+    def get_robots_pos(self):
+        return self.robots_pos
 
     def start(self):
         if not self.is_running:

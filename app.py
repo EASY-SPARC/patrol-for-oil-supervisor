@@ -18,8 +18,10 @@ ns_robot_fb = app.namespace('robot_fb', description='Robot feedback APIs')
 ns_report_oil = app.namespace('report_oil', description='Report Oil APIs')
 ns_kde = app.namespace('kde', description='Kernel Density Estimation APIs')
 ns_env_sensibility = app.namespace('env_sensibility', description='Environmental Sensibility APIs')
+ns_robots_pos = app.namespace('robots_pos', description='Robots Last Known positions APIs')
 
 model_robot_fb = app.model('Robot feedback params', {
+		'robot_id': fields.String(required = True, description="Robot ID", help="Can not be blank"),
 		'xgrid': fields.String(required = True, description="x robot position", help="Can not be blank"),
 		'ygrid': fields.String(required = True, description="y robot position", help="Can not be blank"),
 		'lon': fields.String(required = False, description="lon coordinates for sensed oil particles", help="Can be blank"),
@@ -50,6 +52,7 @@ class MainClass(Resource):
 	def post(self):
 		try: 
 			formData = request.json
+			robot_id = int(formData['robot_id'])
 			xgrid = int(formData['xgrid'])
 			ygrid = int(formData['ygrid'])
 			if formData['lon'] != '':
@@ -57,7 +60,7 @@ class MainClass(Resource):
 			if formData['lat'] != '':
 				lat = np.fromstring(formData['lat'].replace('[', '').replace(']', ''), dtype=float, sep=',')
 
-			simulation.robot_feedback(xgrid, ygrid, lon, lat)
+			simulation.robot_feedback(robot_id, xgrid, ygrid, lon, lat)
 			
 			response = jsonify({
 				"statusCode": 200,
@@ -138,4 +141,21 @@ class MainClass(Resource):
 		return jsonify({
 				"statusCode": 200,
 				"env_sensibility": env_sensibility.tolist()
+			})
+
+@ns_robots_pos.route("/")
+class MainClass(Resource):
+
+	def options(self):
+		response = make_response()
+		response.headers.add("Access-Control-Allow-Origin", "*")
+		response.headers.add('Access-Control-Allow-Headers', "*")
+		response.headers.add('Access-Control-Allow-Methods', "*")
+		return response
+
+	def get(self):
+		robots_pos = simulation.get_robots_pos()
+		return jsonify({
+				"statusCode": 200,
+				"robots_pos": robots_pos.tolist()
 			})
