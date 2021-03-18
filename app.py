@@ -7,6 +7,7 @@ import numpy as np
 import json
 
 from simulation import Simulation
+from wheater_conditions import WheaterConditions
 
 flask_app = Flask(__name__)
 app = Api(app = flask_app, 
@@ -33,7 +34,11 @@ model_report_oil = app.model('Report Oil params', {
 		'lat': fields.String(required = True, description="lat coordinates for sensed oil particles",  help="Can not be blank")
 	})
 
-t_g = 3 * 60
+t_g = 3 * 60			# time step simulation (seconds)
+t_w = 24 * 60 * 60		# time step to download new wheater data (seconds)
+
+wheaterConditions = WheaterConditions(t_w)
+wheaterConditions.start()
 
 simulation = Simulation(t_g, 'assets/region.kml')
 simulation.start()
