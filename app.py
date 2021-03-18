@@ -67,7 +67,6 @@ class MainClass(Resource):
 			if formData['lat'] != '':
 				lat = np.fromstring(formData['lat'].replace('[', '').replace(']', ''), dtype=float, sep=',')
 
-			print([robot_id, xgrid, ygrid, robot_heading])
 			simulation.robot_feedback(robot_id, xgrid, ygrid, robot_heading, lon, lat)
 			
 			response = jsonify({

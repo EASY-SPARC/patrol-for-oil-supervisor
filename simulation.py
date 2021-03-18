@@ -185,10 +185,11 @@ class Simulation(object):
     
     def robot_feedback(self, robot_id, xgrid, ygrid, robot_heading, lon=None, lat=None):
 
+        print('[ROBOT_FB] Robot ' + str(robot_id) + ' is at ' + str(xgrid) + ', ' + str(ygrid))
+
         # Update robot position]
         self.robots_pos[robot_id, :] = [xgrid, ygrid]
         self.robots_heading[robot_id] = robot_heading
-        print([xgrid, ygrid])
         
         # Consume existing particles
         particles_idx = self.idx[np.where(np.logical_and(self.binX == xgrid, self.binY == ygrid))[0]]
