@@ -18,8 +18,7 @@ class Simulation(object):
         self._timer     = None
         self.interval   = interval
         self.is_running = False
-        self.start()
-        
+
         # Instance for gnome interface
         self._gnome = GnomeInterface()
 
@@ -47,6 +46,7 @@ class Simulation(object):
         shp = geometry.shape(first)
         al_coords = np.array(shp.geoms[3].exterior.coords)
 
+        # Checking which cells are inside the region of interest polygon and calculation distance to nearest point in coast
         for i in range(self.width):
             for j in range(self.height):
                 if regionPolygon.intersects(geometry.Point((i/RES_GRID) + self.minLon, (j/RES_GRID) + self.minLat)) == False:
@@ -56,10 +56,12 @@ class Simulation(object):
                     self.dist_grid[j, i] = RES_GRID * np.min(dist)
         
         self.mask_idx = np.argwhere(self.mask.T == 0) # indexes of cells inside polygon
+        
+        # Calculating first simulation step and retrieving particles lon/lat
         self._gnome.step(datetime(2020, 9, 15, 12, 0, 0))
-
         self.lon, self.lat = self._gnome.get_particles()
 
+        # Filtering particles to square domain and saving its indexes for later use
         I1 = np.where(self.lon >= self.minLon)[0]
         lonI = self.lon[I1]
         latI = self.lat[I1]
@@ -78,15 +80,18 @@ class Simulation(object):
 
         self.idx = I1[I2[I3[I4]]]
 
+        # Computing kde with filtered particles
         self.kde = self._compute_kde(lonI, latI)
 
+        # Environmental Sensitivity grid values
         max_dist = np.max(self.dist_grid)
         self.dist_grid = 1/max_dist * 5 * ((1 - self.mask) * max_dist - self.dist_grid) + (-self.mask)
 
-    def _run(self):
-        self.is_running = False
-        self.start()
-        
+        # Initializing robots positions in grid map
+        #self.robots_pos = np.empty(shape=[0,2], dtype=int)
+        self.robots_pos = np.zeros((10, 2), dtype=int)
+
+    def _run(self):        
         # Cyclic code here
         self._gnome.save_particles(self.lon, self.lat)
 
@@ -114,6 +119,10 @@ class Simulation(object):
 
         self.kde = self._compute_kde(lonI, latI)
         
+        # Unlocks timer
+        self.is_running = False
+        self.start()
+        
     def _compute_kde(self, lon=None, lat=None):
         print('Computing new KDE')
         kde = -1 * self.mask # No Fly Zones cells are -1 valued
@@ -135,10 +144,6 @@ class Simulation(object):
 
             # Find which particles are inside the polygon
             for i in range(self.mask_idx.shape[0]):
-                #for j in range(len(binX)):
-                #    if (binX[j] == self.mask_idx[i, 0]) and (binY[j] == self.mask_idx[i, 1]):
-                #        lonp = np.append(lonp, lon[j])
-                #        latp = np.append(latp, lat[j])
                 idxs = np.where(np.logical_and(binX == self.mask_idx[i, 0], binY == self.mask_idx[i, 1]))[0]
                 lonp = np.append(lonp, lon[idxs])
                 latp = np.append(latp, lat[idxs])
@@ -172,7 +177,10 @@ class Simulation(object):
         return binX, binY
     
     def robot_feedback(self, robot_id, xgrid, ygrid, lon=None, lat=None):
-               
+
+        # Update robot position
+        self.robots_pos[robot_id, :] = [xgrid, ygrid]
+        
         # Consume existing particles
         particles_idx = self.idx[np.where(np.logical_and(self.binX == xgrid, self.binY == ygrid))[0]]
         self.lon = np.delete(self.lon, particles_idx)
