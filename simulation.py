@@ -58,7 +58,8 @@ class Simulation(object):
         self.mask_idx = np.argwhere(self.mask.T == 0) # indexes of cells inside polygon
         
         # Calculating first simulation step and retrieving particles lon/lat
-        self._gnome.step(datetime(2020, 9, 15, 12, 0, 0))
+        #self._gnome.step(datetime(2020, 9, 15, 12, 0, 0))
+        self._gnome.step(datetime.now() + timedelta(hours=3)) # -03 GMT timezone
         self.lon, self.lat = self._gnome.get_particles()
 
         # Filtering particles to square domain and saving its indexes for later use
@@ -90,12 +91,18 @@ class Simulation(object):
         # Initializing robots positions in grid map
         #self.robots_pos = np.empty(shape=[0,2], dtype=int)
         self.robots_pos = np.zeros((10, 2), dtype=int)
+        self.robots_heading = np.zeros((10, 1), dtype=float)
+
+        # For tests
+        self.robots_pos[0, :] = [1, 16] 
+        self.robots_pos[1, :] = [1, 17] 
 
     def _run(self):        
         # Cyclic code here
         self._gnome.save_particles(self.lon, self.lat)
 
-        self._gnome.step(datetime(2020, 9, 15, 12, 0, 0))
+        #self._gnome.step(datetime(2020, 9, 15, 12, 0, 0))
+        self._gnome.step(datetime.now() + timedelta(hours=3)) # -03 GMT timezone
 
         self.lon, self.lat = self._gnome.get_particles()
 
@@ -176,10 +183,12 @@ class Simulation(object):
 
         return binX, binY
     
-    def robot_feedback(self, robot_id, xgrid, ygrid, lon=None, lat=None):
+    def robot_feedback(self, robot_id, xgrid, ygrid, robot_heading, lon=None, lat=None):
 
-        # Update robot position
+        # Update robot position]
         self.robots_pos[robot_id, :] = [xgrid, ygrid]
+        self.robots_heading[robot_id] = robot_heading
+        print([xgrid, ygrid])
         
         # Consume existing particles
         particles_idx = self.idx[np.where(np.logical_and(self.binX == xgrid, self.binY == ygrid))[0]]
@@ -223,6 +232,9 @@ class Simulation(object):
 
     def get_robots_pos(self):
         return self.robots_pos
+    
+    def get_robots_heading(self):
+        return self.robots_heading
 
     def start(self):
         if not self.is_running:

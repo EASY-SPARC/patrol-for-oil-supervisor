@@ -25,6 +25,7 @@ model_robot_fb = app.model('Robot feedback params', {
 		'robot_id': fields.String(required = True, description="Robot ID", help="Can not be blank"),
 		'xgrid': fields.String(required = True, description="x robot position", help="Can not be blank"),
 		'ygrid': fields.String(required = True, description="y robot position", help="Can not be blank"),
+		'robot_heading': fields.String(required = True, description="Robot heading", help="Can not be blank"),
 		'lon': fields.String(required = False, description="lon coordinates for sensed oil particles", help="Can be blank"),
 		'lat': fields.String(required = False, description="lat coordinates for sensed oil particles",  help="Can be blank")
 	})
@@ -60,12 +61,14 @@ class MainClass(Resource):
 			robot_id = int(formData['robot_id'])
 			xgrid = int(formData['xgrid'])
 			ygrid = int(formData['ygrid'])
+			robot_heading = float(formData['robot_heading'])
 			if formData['lon'] != '':
 				lon = np.fromstring(formData['lon'].replace('[', '').replace(']', ''), dtype=float, sep=',')
 			if formData['lat'] != '':
 				lat = np.fromstring(formData['lat'].replace('[', '').replace(']', ''), dtype=float, sep=',')
 
-			simulation.robot_feedback(robot_id, xgrid, ygrid, lon, lat)
+			print([robot_id, xgrid, ygrid, robot_heading])
+			simulation.robot_feedback(robot_id, xgrid, ygrid, robot_heading, lon, lat)
 			
 			response = jsonify({
 				"statusCode": 200,
@@ -160,7 +163,9 @@ class MainClass(Resource):
 
 	def get(self):
 		robots_pos = simulation.get_robots_pos()
+		robots_heading = simulation.get_robots_heading()
 		return jsonify({
 				"statusCode": 200,
-				"robots_pos": robots_pos.tolist()
+				"robots_pos": robots_pos.tolist(),
+				"robots_heading": robots_heading.tolist()
 			})

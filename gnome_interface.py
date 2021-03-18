@@ -87,7 +87,8 @@ class GnomeInterface:
         curr_file = get_datafile(os.path.join(base_dir, './assets/currents.nc'))
         model.movers += GridCurrentMover(curr_file, num_method='Euler')
 
-        wind_file = get_datafile(os.path.join(base_dir, './assets/vento15a28de09.nc'))
+        #wind_file = get_datafile(os.path.join(base_dir, './assets/vento15a28de09.nc'))
+        wind_file = get_datafile(os.path.join(base_dir, './assets/wind.nc'))
         w_mover = GridWindMover(wind_file)
         w_mover.uncertain_speed_scale = 1
         w_mover.wind_scale = 2
