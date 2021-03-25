@@ -6,7 +6,7 @@ import os
 from datetime import datetime, timedelta
 
 
-class WheaterConditions(object):
+class WeatherConditions(object):
 
     def __init__(self, interval):
         self._timer     = None
@@ -25,11 +25,15 @@ class WheaterConditions(object):
         # First run
         current_time = datetime.now()
         end_time = current_time + self.time_step
+        
+        # -03 GMT timezone
+        current_time = current_time + timedelta(hours=3) 
+        end_time = end_time + timedelta(hours=3) 
 
-        print('Getting currents wheater data')
+        print('Getting currents weather data')
         self.get_currents(current_time, end_time, 'assets/currents.nc')
 
-        print('Getting wind wheater data')
+        print('Getting wind weather data')
         self.get_wind(current_time, end_time, 'assets/wind.nc')
 
     def get_currents(self, start_time, end_time, filename):
@@ -90,10 +94,14 @@ class WheaterConditions(object):
         current_time = datetime.now()
         end_time = current_time + self.time_step
 
-        print('Getting currents wheater data')
+        # -03 GMT timezone
+        current_time = current_time + timedelta(hours=3) 
+        end_time = end_time + timedelta(hours=3) 
+
+        print('Getting currents weather data')
         self.get_currents(current_time, end_time, 'assets/currents.nc')
 
-        print('Getting wind wheater data')
+        print('Getting wind weather data')
         self.get_wind(current_time, end_time, 'assets/wind.nc')
 
         self.is_running = False

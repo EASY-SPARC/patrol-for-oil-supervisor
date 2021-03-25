@@ -7,7 +7,7 @@ import numpy as np
 import json
 
 from simulation import Simulation
-from wheater_conditions import WheaterConditions
+from weather_conditions import WeatherConditions
 
 flask_app = Flask(__name__)
 app = Api(app = flask_app, 
@@ -36,10 +36,10 @@ model_report_oil = app.model('Report Oil params', {
 	})
 
 t_g = 3 * 60			# time step simulation (seconds)
-t_w = 24 * 60 * 60		# time step to download new wheater data (seconds)
+t_w = 24 * 60 * 60		# time step to download new weather data (seconds)
 
-wheaterConditions = WheaterConditions(t_w)
-wheaterConditions.start()
+weatherConditions = WeatherConditions(t_w)
+weatherConditions.start()
 
 simulation = Simulation(t_g, 'assets/region.kml')
 simulation.start()
