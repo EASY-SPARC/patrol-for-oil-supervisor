@@ -130,38 +130,37 @@ class Simulation(object):
         self.is_running = False
         self.start()
         
-    def _compute_kde(self, lon=None, lat=None):
+    def _compute_kde(self, lon, lat):
         print('Computing new KDE')
         kde = -1 * self.mask # No Fly Zones cells are -1 valued
+    
+        h, yEdges, xEdges = np.histogram2d(x=lat, y=lon, bins=[self.height, self.width])
 
-        if (lon is not None) and (lat is not None):
-            h, yEdges, xEdges = np.histogram2d(x=lat, y=lon, bins=[self.height, self.width])
+        xls = np.mean(np.array([xEdges[0:-1], xEdges[1:]]), axis=0)
+        yls = np.mean(np.array([yEdges[0:-1], yEdges[1:]]), axis=0)
+        xx, yy = np.meshgrid(xls, yls)
 
-            xls = np.mean(np.array([xEdges[0:-1], xEdges[1:]]), axis=0)
-            yls = np.mean(np.array([yEdges[0:-1], yEdges[1:]]), axis=0)
-            xx, yy = np.meshgrid(xls, yls)
+        #positions = np.vstack([xx.T.ravel(), yy.T.ravel()]).T
+        positions = np.vstack([xx.ravel(), yy.ravel()])
 
-            #positions = np.vstack([xx.T.ravel(), yy.T.ravel()]).T
-            positions = np.vstack([xx.ravel(), yy.ravel()])
+        binX, binY = self._get_bins(lon, lat, xEdges, yEdges)
 
-            binX, binY = self._get_bins(lon, lat, xEdges, yEdges)
+        lonp = np.array([], dtype='float64')
+        latp = np.array([], dtype='float64')
 
-            lonp = np.array([], dtype='float64')
-            latp = np.array([], dtype='float64')
+        # Find which particles are inside the polygon
+        for i in range(self.mask_idx.shape[0]):
+            idxs = np.where(np.logical_and(binX == self.mask_idx[i, 0], binY == self.mask_idx[i, 1]))[0]
+            lonp = np.append(lonp, lon[idxs])
+            latp = np.append(latp, lat[idxs])
 
-            # Find which particles are inside the polygon
-            for i in range(self.mask_idx.shape[0]):
-                idxs = np.where(np.logical_and(binX == self.mask_idx[i, 0], binY == self.mask_idx[i, 1]))[0]
-                lonp = np.append(lonp, lon[idxs])
-                latp = np.append(latp, lat[idxs])
+        f = gaussian_kde(np.vstack([lonp, latp]), bw_method=KDE_BW)
+        f_values = f.evaluate(positions).reshape(kde.shape)
+        kde = 5/np.max(f_values) * (1 - self.mask) * f_values * (h>0) + kde
+        print('Computed new KDE')
 
-            f = gaussian_kde(np.vstack([lonp, latp]), bw_method=KDE_BW)
-            f_values = f.evaluate(positions).reshape(kde.shape)
-            kde = 5/np.max(f_values) * (1 - self.mask) * f_values * (h>0) + kde
-            print('Computed new KDE')
-
-            self.binX = binX
-            self.binY = binY
+        self.binX = binX
+        self.binY = binY
 
         return kde
 
@@ -219,7 +218,7 @@ class Simulation(object):
         self.idx = I1[I2[I3[I4]]]
 
         # Compute kde
-        self._compute_kde(lonI, latI)
+        self.kde = self._compute_kde(lonI, latI)
 
 
     def report_oil(self, lon, lat):
