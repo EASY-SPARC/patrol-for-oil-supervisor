@@ -25,10 +25,6 @@ class WeatherConditions(object):
         # First run
         current_time = datetime.now()
         end_time = current_time + self.time_step
-        
-        # -03 GMT timezone
-        current_time = current_time + timedelta(hours=3) 
-        end_time = end_time + timedelta(hours=3) 
 
         print('Getting currents weather data')
         self.get_currents(current_time, end_time, 'assets/currents.nc')
@@ -93,10 +89,6 @@ class WeatherConditions(object):
     def _run(self):
         current_time = datetime.now()
         end_time = current_time + self.time_step
-
-        # -03 GMT timezone
-        current_time = current_time + timedelta(hours=3) 
-        end_time = end_time + timedelta(hours=3) 
 
         print('Getting currents weather data')
         self.get_currents(current_time, end_time, 'assets/currents.nc')
