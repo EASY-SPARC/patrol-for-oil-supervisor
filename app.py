@@ -20,6 +20,7 @@ ns_report_oil = app.namespace('report_oil', description='Report Oil APIs')
 ns_kde = app.namespace('kde', description='Kernel Density Estimation APIs')
 ns_env_sensibility = app.namespace('env_sensibility', description='Environmental Sensibility APIs')
 ns_robots_pos = app.namespace('robots_pos', description='Robots Last Known positions APIs')
+ns_particles = app.namespace('particles', description='Particles APIs')
 
 model_robot_fb = app.model('Robot feedback params', {
 		'robot_id': fields.String(required = True, description="Robot ID", help="Can not be blank"),
@@ -128,10 +129,12 @@ class MainClass(Resource):
 
 	def get(self):
 		kde = simulation.get_kde()
-		return jsonify({
+		response = jsonify({
 				"statusCode": 200,
 				"kde": kde.tolist()
 			})
+		response.headers.add('Access-Control-Allow-Origin', '*')
+		return response
 
 @ns_env_sensibility.route("/")
 class MainClass(Resource):
@@ -145,10 +148,12 @@ class MainClass(Resource):
 
 	def get(self):
 		env_sensibility = simulation.get_env_sensibility()
-		return jsonify({
+		response = jsonify({
 				"statusCode": 200,
 				"env_sensibility": env_sensibility.tolist()
 			})
+		response.headers.add('Access-Control-Allow-Origin', '*')
+		return response
 
 @ns_robots_pos.route("/")
 class MainClass(Resource):
@@ -163,8 +168,30 @@ class MainClass(Resource):
 	def get(self):
 		robots_pos = simulation.get_robots_pos()
 		robots_heading = simulation.get_robots_heading()
-		return jsonify({
+		response = jsonify({
 				"statusCode": 200,
 				"robots_pos": robots_pos.tolist(),
 				"robots_heading": robots_heading.tolist()
 			})
+		response.headers.add('Access-Control-Allow-Origin', '*')
+		return response
+
+@ns_particles.route("/")
+class MainClass(Resource):
+
+	def options(self):
+		response = make_response()
+		response.headers.add("Access-Control-Allow-Origin", "*")
+		response.headers.add('Access-Control-Allow-Headers', "*")
+		response.headers.add('Access-Control-Allow-Methods', "*")
+		return response
+
+	def get(self):
+		particles = simulation.get_particles()
+		response = jsonify({
+				"statusCode": 200,
+				"particles": particles.tolist()
+			})
+		
+		response.headers.add('Access-Control-Allow-Origin', '*')
+		return response
