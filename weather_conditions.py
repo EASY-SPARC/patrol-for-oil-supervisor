@@ -19,11 +19,11 @@ class WeatherConditions(object):
         self.east = -34
         self.west = -36.5
 
-        # 3 days time step
-        self.time_step = timedelta(days = 3)
+        # considering run step interval and 2 more days
+        self.time_step = timedelta(seconds = interval) + timedelta(days = 2) 
 
         # First run
-        current_time = datetime.now()
+        current_time = datetime.now() - timedelta(days = 1)
         end_time = current_time + self.time_step
 
         print('Getting currents weather data')
@@ -87,7 +87,7 @@ class WeatherConditions(object):
             windFile.close()
 
     def _run(self):
-        current_time = datetime.now()
+        current_time = datetime.now() - timedelta(days = 1)
         end_time = current_time + self.time_step
 
         print('Getting currents weather data')
