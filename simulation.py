@@ -230,6 +230,9 @@ class Simulation(object):
     def get_env_sensibility(self):
         return self.dist_grid
 
+    def get_particles(self):
+        return np.vstack([self.lon, self.lat])
+
     def get_robots_pos(self):
         return self.robots_pos
     
