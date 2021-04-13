@@ -189,14 +189,14 @@ class MainClass(Resource):
 		response.headers.add('Access-Control-Allow-Origin', '*')
 		return response
 
-@ns_variables.route("/robots_pos/")
+@ns_variables.route("/robots_lon_lat/")
 class MainClass(Resource):
 	def get(self):
-		robots_pos = simulation.get_robots_pos()
+		robots_lon_lat = simulation.get_robots_lon_lat()
 		robots_heading = simulation.get_robots_heading()
 		response = jsonify({
 				"statusCode": 200,
-				"robots_pos": robots_pos.tolist(),
+				"robots_lon_lat": robots_lon_lat.tolist(),
 				"robots_heading": robots_heading.tolist()
 			})
 		response.headers.add('Access-Control-Allow-Origin', '*')

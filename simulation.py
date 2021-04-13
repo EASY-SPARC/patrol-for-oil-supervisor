@@ -90,12 +90,13 @@ class Simulation(object):
 
         # Initializing robots positions in grid map
         #self.robots_pos = np.empty(shape=[0,2], dtype=int)
-        self.robots_pos = np.zeros((10, 2), dtype=int)
-        self.robots_heading = np.zeros((10, 1), dtype=float)
+        self.robots_pos = np.zeros((3, 2), dtype=int)
+        self.robots_heading = np.zeros((3, 1), dtype=float)
 
         # For tests
         self.robots_pos[0, :] = [1, 16] 
         self.robots_pos[1, :] = [1, 17] 
+        self.robots_pos[2, :] = [1, 18] 
 
     def _run(self):        
         # Cyclic code here
@@ -253,6 +254,14 @@ class Simulation(object):
 
     def get_robots_pos(self):
         return self.robots_pos
+
+    def get_robots_lon_lat(self):
+        robots_lon_lat = np.copy(self.robots_pos).astype('float')
+
+        robots_lon_lat[:, 0] = (robots_lon_lat[:, 0]/RES_GRID) + self.minLon
+        robots_lon_lat[:, 1] = (robots_lon_lat[:, 1]/RES_GRID) + self.minLat
+
+        return robots_lon_lat
     
     def get_robots_heading(self):
         return self.robots_heading
