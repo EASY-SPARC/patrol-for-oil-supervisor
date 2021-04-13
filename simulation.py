@@ -30,7 +30,7 @@ class Simulation(object):
         regionKML.from_string(regionString)
         regionPolygon = list(list(list(regionKML.features())[0].features())[0].features())[0].geometry
         (self.minLon, self.minLat, self.maxLon, self.maxLat) = regionPolygon.bounds
-        coords = np.array(regionPolygon.exterior.coords)
+        self.coords = np.array(regionPolygon.exterior.coords)
 
         # Create grid maps based on region boundaries
         self.width = int(np.ceil(RES_GRID * (self.maxLon - self.minLon)))
@@ -102,7 +102,7 @@ class Simulation(object):
         self._gnome.save_particles(self.lon, self.lat)
 
         #self._gnome.step(datetime(2020, 9, 15, 12, 0, 0))
-        self._gnome.step(datetime.now() + timedelta(hours=3)) # -03 GMT timezone
+        #self._gnome.step(datetime.now() + timedelta(hours=3)) # -03 GMT timezone
 
         self.lon, self.lat = self._gnome.get_particles()
 
@@ -230,7 +230,25 @@ class Simulation(object):
     def get_env_sensibility(self):
         return self.dist_grid
 
-    def get_particles(self):
+    def get_particles(self, minLon, maxLon, minLat, maxLat):
+        # Compute new global idx
+        I1 = np.where(self.lon >= minLon)[0]
+        lonI = self.lon[I1]
+        latI = self.lat[I1]
+
+        I2 = np.where(lonI <= maxLon)[0]
+        lonI = lonI[I2]
+        latI = latI[I2]
+
+        I3 = np.where(latI >= minLat)[0]
+        lonI = lonI[I3]
+        latI = latI[I3]
+
+        I4 = np.where(latI <= maxLat)[0]
+        lonI = lonI[I4]
+        latI = latI[I4]
+
+        #return np.vstack([lonI, latI])
         return np.vstack([self.lon, self.lat])
 
     def get_robots_pos(self):
@@ -238,6 +256,9 @@ class Simulation(object):
     
     def get_robots_heading(self):
         return self.robots_heading
+
+    def get_region(self):
+        return self.coords
 
     def start(self):
         if not self.is_running:

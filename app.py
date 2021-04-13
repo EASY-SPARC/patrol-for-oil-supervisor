@@ -12,8 +12,8 @@ from weather_conditions import WeatherConditions
 flask_app = Flask(__name__)
 app = Api(app = flask_app, 
 		  version = "1.0", 
-		  title = "Patrol for oil", 
-		  description = "Service for the patrol for oil application.")
+		  title = "Patrol for oil APIs", 
+		  description = "Service APIs for the patrol for oil application.")
 
 ns_robot_fb = app.namespace('robot_fb', description='Robot feedback APIs')
 ns_report_oil = app.namespace('report_oil', description='Report Oil APIs')
@@ -21,6 +21,7 @@ ns_kde = app.namespace('kde', description='Kernel Density Estimation APIs')
 ns_env_sensibility = app.namespace('env_sensibility', description='Environmental Sensibility APIs')
 ns_robots_pos = app.namespace('robots_pos', description='Robots Last Known positions APIs')
 ns_particles = app.namespace('particles', description='Particles APIs')
+ns_variables = app.namespace('simulation', description='Simulation variables APIs')
 
 model_robot_fb = app.model('Robot feedback params', {
 		'robot_id': fields.String(required = True, description="Robot ID", help="Can not be blank"),
@@ -176,18 +177,39 @@ class MainClass(Resource):
 		response.headers.add('Access-Control-Allow-Origin', '*')
 		return response
 
-@ns_particles.route("/")
+@ns_variables.route('/region/')
 class MainClass(Resource):
-
-	def options(self):
-		response = make_response()
-		response.headers.add("Access-Control-Allow-Origin", "*")
-		response.headers.add('Access-Control-Allow-Headers', "*")
-		response.headers.add('Access-Control-Allow-Methods', "*")
+	def get(self):
+		region = simulation.get_region()
+		response = jsonify({
+				"statusCode": 200,
+				"region": region.tolist()
+			})
+		
+		response.headers.add('Access-Control-Allow-Origin', '*')
 		return response
 
+@ns_variables.route("/robots_pos/")
+class MainClass(Resource):
 	def get(self):
-		particles = simulation.get_particles()
+		robots_pos = simulation.get_robots_pos()
+		robots_heading = simulation.get_robots_heading()
+		response = jsonify({
+				"statusCode": 200,
+				"robots_pos": robots_pos.tolist(),
+				"robots_heading": robots_heading.tolist()
+			})
+		response.headers.add('Access-Control-Allow-Origin', '*')
+		return response
+
+@ns_variables.route("/particles/minLon:<minLon>&maxLon:<maxLon>&minLat:<minLat>&maxLat:<maxLat>")
+@ns_variables.param('minLon', 'Min Longitude')
+@ns_variables.param('maxLon', 'Max Longitude')
+@ns_variables.param('minLat', 'Min Latitude')
+@ns_variables.param('maxLat', 'Max Latitude')
+class MainClass(Resource):
+	def get(self, minLon, maxLon, minLat, maxLat):
+		particles = simulation.get_particles(float(minLon), float(maxLon), float(minLat), float(maxLat))
 		response = jsonify({
 				"statusCode": 200,
 				"particles": particles.tolist()
