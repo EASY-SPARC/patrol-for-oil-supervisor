@@ -46,6 +46,38 @@ class Simulation(object):
         shp = geometry.shape(first)
         al_coords = np.array(shp.geoms[3].exterior.coords)
 
+        # Read ISL shape file
+        isl_shp = shapefile.Reader('./assets/shp/ISL.shp')
+        isl_attr = np.array(isl_shp.records())[:, 0] # Gets only isl value
+        isl_features = isl_shp.shapeRecords()
+        self.isl = np.zeros((len(isl_attr) - len(np.where(isl_attr == 0)[0]), 3)) # [lon, lat, isl_value]
+        cnt = 0
+        for i in range(len(isl_features)):
+            # Each feature has a geo_interface with a list of coordinates representing an ISL value
+            if (isl_attr[i] > 0):
+                if (isl_features[i].shape.__geo_interface__['type'] == 'LineString'):
+                    mean_lon, mean_lat = np.mean(np.array(isl_features[i].shape.__geo_interface__['coordinates']), axis = 0)
+                elif (isl_features[i].shape.__geo_interface__['type'] == 'MultiLineString'):
+                    aux_list = isl_features[i].shape.__geo_interface__['coordinates']
+                    aux_coords = np.vstack([aux_list[j] for j in range(len(aux_list))])
+                    mean_lon, mean_lat = np.mean(aux_coords, axis = 0)
+                else:
+                    print('Unknown type: ' + isl_features[i].shape.__geo_interface__['type'])
+                    continue
+            
+                self.isl[cnt, :] = [mean_lon, mean_lat, isl_attr[i]]
+                cnt += 1
+
+        # Filtering ISL
+        idx = np.where(self.isl[:, 1] >= self.minLat)[0]
+        isl_filtered = self.isl[idx, :]
+
+        idx = np.where(isl_filtered[:, 1] <= self.maxLat)[0]
+        isl_filtered = isl_filtered[idx, :]
+
+        # Environmental Sensitivity based on ISL centered Potential Fields
+        
+
         # Checking which cells are inside the region of interest polygon and calculation distance to nearest point in coast
         for i in range(self.width):
             for j in range(self.height):
@@ -103,7 +135,7 @@ class Simulation(object):
         self._gnome.save_particles(self.lon, self.lat)
 
         #self._gnome.step(datetime(2020, 9, 15, 12, 0, 0))
-        #self._gnome.step(datetime.now() + timedelta(hours=3)) # -03 GMT timezone
+        self._gnome.step(datetime.now() + timedelta(hours=3)) # -03 GMT timezone
 
         self.lon, self.lat = self._gnome.get_particles()
 
@@ -196,9 +228,6 @@ class Simulation(object):
         self.lon = np.delete(self.lon, particles_idx)
         self.lat = np.delete(self.lat, particles_idx)
 
-        # TODO Add sensed particles
-
-
         # Compute new global idx
         I1 = np.where(self.lon >= self.minLon)[0]
         lonI = self.lon[I1]
@@ -268,6 +297,9 @@ class Simulation(object):
 
     def get_region(self):
         return self.coords
+
+    def get_isl(self):
+        return self.isl
 
     def start(self):
         if not self.is_running:

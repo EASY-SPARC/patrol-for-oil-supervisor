@@ -189,6 +189,18 @@ class MainClass(Resource):
 		response.headers.add('Access-Control-Allow-Origin', '*')
 		return response
 
+@ns_variables.route('/isl/')
+class MainClass(Resource):
+	def get(self):
+		isl = simulation.get_isl()
+		response = jsonify({
+				"statusCode": 200,
+				"isl": isl.tolist()
+			})
+		
+		response.headers.add('Access-Control-Allow-Origin', '*')
+		return response
+
 @ns_variables.route("/robots_lon_lat/")
 class MainClass(Resource):
 	def get(self):
