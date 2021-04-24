@@ -75,10 +75,25 @@ class Simulation(object):
         idx = np.where(isl_filtered[:, 1] <= self.maxLat)[0]
         isl_filtered = isl_filtered[idx, :]
 
-        # Environmental Sensitivity based on ISL centered Potential Fields
-        
+        # Gaussians ISL-centered as potential fields
+        sigma = 0.1
+        self.potential_field = np.zeros((self.height, self.width))
+        for potential in isl_filtered:
+            for i in range(self.width):
+                for j in range(self.height):
+                    curr_lon = (i/RES_GRID) + self.minLon
+                    curr_lat = (j/RES_GRID) + self.minLat
 
-        # Checking which cells are inside the region of interest polygon and calculation distance to nearest point in coast
+                    Amp = potential[2]
+                    lon_0 = potential[0]
+                    lat_0 = potential[1]
+
+                    self.potential_field[j, i] += Amp * np.exp(-( \
+                        ((curr_lon - lon_0)**2)/(2 * sigma**2) + \
+                            ((curr_lat - lat_0)**2)/(2 * sigma**2) \
+                                ))
+
+        # Checking which cells are inside the region of interest polygon and calculating distance to nearest point in coast
         for i in range(self.width):
             for j in range(self.height):
                 if regionPolygon.intersects(geometry.Point((i/RES_GRID) + self.minLon, (j/RES_GRID) + self.minLat)) == False:
@@ -90,7 +105,6 @@ class Simulation(object):
         self.mask_idx = np.argwhere(self.mask.T == 0) # indexes of cells inside polygon
         
         # Calculating first simulation step and retrieving particles lon/lat
-        #self._gnome.step(datetime(2020, 9, 15, 12, 0, 0))
         self._gnome.step(datetime.now() + timedelta(hours=3)) # -03 GMT timezone
         self.lon, self.lat = self._gnome.get_particles()
 
@@ -116,9 +130,12 @@ class Simulation(object):
         # Computing kde with filtered particles
         self.kde = self._compute_kde(lonI, latI)
 
-        # Environmental Sensitivity grid values
+        # Normalizing Environmental Sensibility and applying region of interest mask
         max_dist = np.max(self.dist_grid)
-        self.dist_grid = 1/max_dist * 5 * ((1 - self.mask) * max_dist - self.dist_grid) + (-self.mask)
+        self.dist_grid = 1/max_dist * 5 * ((1 - self.mask) * max_dist - self.dist_grid) - self.mask
+
+        max_potential = np.max(self.potential_field)
+        self.potential_field = 1/max_potential * 5 * (1 - self.mask) * self.potential_field - self.mask
 
         # Initializing robots positions in grid map
         #self.robots_pos = np.empty(shape=[0,2], dtype=int)
@@ -173,7 +190,6 @@ class Simulation(object):
         yls = np.mean(np.array([yEdges[0:-1], yEdges[1:]]), axis=0)
         xx, yy = np.meshgrid(xls, yls)
 
-        #positions = np.vstack([xx.T.ravel(), yy.T.ravel()]).T
         positions = np.vstack([xx.ravel(), yy.ravel()])
 
         binX, binY = self._get_bins(lon, lat, xEdges, yEdges)
@@ -258,7 +274,9 @@ class Simulation(object):
         return self.kde
 
     def get_env_sensibility(self):
-        return self.dist_grid
+        # return dist_grid # Alternative
+        return self.potential_field
+    
 
     def get_particles(self, minLon, maxLon, minLat, maxLat):
         # Compute new global idx
