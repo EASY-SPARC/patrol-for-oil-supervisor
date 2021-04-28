@@ -1,0 +1,8 @@
+.row {
+    padding-bottom: 75px;
+}
+
+img .inline {
+    display: inline-block;
+    vertical-align: middle;
+}

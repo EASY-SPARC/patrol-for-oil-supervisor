@@ -1,0 +1,35 @@
+{% extends "base.html" %} {% block content %}
+
+<div class="container">
+    <form action="/start" method="post">
+        <div class="row">
+            <div class="col">
+                <h3 class="text-center">Simulation configuration</h3>
+
+            </div>
+            <div class="col">
+                <h3 class="text-center">Mission configuration</h3>
+                <div class="mb-3">
+                    <label for="regionFile" class="form-label">Region of Interest file:</label>
+                    <input class="form-control" type="file" id="regionFile">
+                </div>
+                <div class="mb-3">
+                    <label for="t_mission_input" class="form-label">Mission time</label>
+                    <input class="form-control" id="t_mission_input">
+                </div>
+                <div class="mb-3">
+                    <label for="n_robots_input" class="form-label">Number of robots</label>
+                    <div class="input-group">
+                        <input readonly type="text" class="form-control" value="0" id="n_robots_input">
+                        <a class="btn btn-outline-secondary" type="button"><i class="fas fa-minus-circle"></i></a>
+                        <a class="btn btn-outline-secondary" type="button"><i class="fas fa-plus-circle"></i></a>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="row justify-content-md-center">
+            <button class="btn btn-primary btn-large col-md-3"><i class="far fa-play-circle"></i>&nbsp;START</button>
+        </div>
+    </form>
+</div>
+{% endblock %}

@@ -1,0 +1,48 @@
+<!DOCTYPE html>
+
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.0.0-beta3/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-eOJMYsd53ii+scO/bJGFsiCZc+5NDVN2yr8+0RDqr0Ql0h+rP48ckxlpbzKgwra6" crossorigin="anonymous">
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.0.0-beta3/dist/js/bootstrap.bundle.min.js" integrity="sha384-JEW9xMcG8R+pH31jmWH6WWP0WintQrMb4s7ZOdauHnUtxwoG2vI5DkLtS3qm9Ekf" crossorigin="anonymous"></script>
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
+    <script src="https://kit.fontawesome.com/10ebf3e3af.js" crossorigin="anonymous"></script>
+    <link rel="stylesheet" href="{{ url_for('static',filename='css/style.css') }}">
+    <title>Entre Mares | Patrol for Oil</title>
+    <link rel="icon" type="image/png" href="{{ url_for('static',filename='img/favicon.png') }}" />
+</head>
+
+<body>
+    <div class="container">
+        <div class="row justify-content-md-center">
+            <div class="col-md-4">
+                <img height="200" width="350" src="{{ url_for('static',filename='img/logo.png') }}" id="logo" />
+            </div>
+            <div class="col-md-5">
+                <h1>Patrol for Oil</h1>
+                <h3>Persistent monitoring system for oil in marine environment using autonomous cooperative vehicles</h3>
+            </div>
+        </div>
+    </div>
+
+    <div id="content">{% block content %}{% endblock %}</div>
+
+    <footer class="container">
+        <div class="row">
+            <div class="col-md-4">
+                <a href="https://ufal.br/"><img class="inline" height="200" width="150" src="{{ url_for('static',filename='img/ufal.png') }}" /></a>
+            </div>
+            <div class="col-md-4">
+                <a href="https://www1.capes.gov.br/bolsas/programas-estrategicos/programas-emergenciais/capes-entre-mares"><img class="inline" height="200" width="260" src="{{ url_for('static',filename='img/entre-mares.png') }}" /></a>
+            </div>
+            <div class="col-md-4">
+                <a href="https://easy-sparc.github.io/"><img class="inline" height="100" width="250" src="{{ url_for('static',filename='img/easy-sparc.png') }}" /></a>
+            </div>
+        </div>
+    </footer>
+
+</body>
+
+</html>

@@ -1,4 +1,5 @@
 from flask import Flask, request, jsonify, make_response, Response
+from flask import render_template
 from flask_restplus import Api, Resource, fields
 
 from datetime import datetime, timedelta
@@ -15,13 +16,11 @@ app = Api(app = flask_app,
 		  title = "Patrol for oil APIs", 
 		  description = "Service APIs for the patrol for oil application.")
 
+ns_config = app.namespace('config', description='Simulation and Mission configuration APIs')
 ns_robot_fb = app.namespace('robot_fb', description='Robot feedback APIs')
 ns_report_oil = app.namespace('report_oil', description='Report Oil APIs')
-ns_kde = app.namespace('kde', description='Kernel Density Estimation APIs')
-ns_env_sensibility = app.namespace('env_sensibility', description='Environmental Sensibility APIs')
-ns_robots_pos = app.namespace('robots_pos', description='Robots Last Known positions APIs')
-ns_particles = app.namespace('particles', description='Particles APIs')
-ns_variables = app.namespace('simulation', description='Simulation variables APIs')
+ns_simulation = app.namespace('simulation', description='Simulation variables APIs')
+ns_mission = app.namespace('mission', description='Mission variables APIs')
 
 model_robot_fb = app.model('Robot feedback params', {
 		'robot_id': fields.String(required = True, description="Robot ID", help="Can not be blank"),
@@ -37,14 +36,123 @@ model_report_oil = app.model('Report Oil params', {
 		'lat': fields.String(required = True, description="lat coordinates for sensed oil particles",  help="Can not be blank")
 	})
 
-t_g = 3 * 60			# time step simulation (seconds)
-t_w = 24 * 60 * 60		# time step to download new weather data (seconds)
+model_mission_conf = app.model('Configure mission', {
+		'region': fields.String(required = True, description = "Region of interest polygon"),
+		't_mission': fields.Float(required = True, description = "Time for mission"),
+		'n_robots': fields.Integer(required = True, description = "Number of robots in mission"),
+		'robots_weights': fields.List(fields.List(fields.Float), required = False, description = "List of weights for reactive patrolling strategy")
+	})
 
-weatherConditions = WeatherConditions(t_w)
-weatherConditions.start()
+model_simul_conf = app.model('Conf Simulation params', {
+		't_g': fields.Float(required = True, description="Time interval for gnome simulation"),
+		't_w': fields.Float(required = True, description="Time interval for weather parameters update"),
+		'minLon': fields.Float(required = False, description="Simulation area min longitude"),
+		'maxLon': fields.Float(required = False, description="Simulation area max longitude"),
+		'minLat': fields.Float(required = False, description="Simulation area min latitude"),
+		'maxLat': fields.Float(required = False, description="Simulation area max latitude")
+	})
 
-simulation = Simulation(t_g, 'assets/region.kml')
-simulation.start()
+t_g = 3 * 60			# default time step simulation (seconds)
+t_w = 24 * 60 * 60		# default time step to download new weather data (seconds)
+
+region = 'assets/region.kml'
+
+simulation = None
+weatherConditions = None
+
+# HTML rendering
+@flask_app.route('/index', methods=['GET'])
+def display_conf():
+	return render_template('index.html')
+
+
+@flask_app.route('/start', methods=['POST'])
+def display_started():
+	#if weatherConditions == None:
+	weatherConditions = WeatherConditions(t_w)
+	
+	weatherConditions.start()
+
+	#if simulation == None:
+	simulation = Simulation(t_g, region)
+
+	simulation.start()
+
+	return render_template('started_simul.html')
+
+@flask_app.route('/stop', methods=['POST'])
+def display_stoped():
+	weatherConditions.stop()
+	simulation.stop()
+
+	return render_template('stoped_simul.html')
+
+# API requests
+@ns_config.route("/simlation")
+class MainClass(Resource):
+
+	def options(self):
+		response = make_response()
+		response.headers.add("Access-Control-Allow-Origin", "*")
+		response.headers.add('Access-Control-Allow-Headers', "*")
+		response.headers.add('Access-Control-Allow-Methods', "*")
+		return response
+
+	@app.expect(model_simul_conf)		
+	def post(self):
+		try: 
+			formData = request.json
+			t_g = formData['t_g']
+			t_w = formData['t_w']
+			
+			response = jsonify({
+				"statusCode": 200,
+				"status": "Simulation config applied",
+				"result": "ok"
+				})
+			response.headers.add('Access-Control-Allow-Origin', '*')
+			return response
+		except Exception as error:
+			return jsonify({
+				"statusCode": 500,
+				"status": "Could not apply configuration",
+				"error": str(error)
+			})
+
+@ns_config.route("/mission")
+class MainClass(Resource):
+
+	def options(self):
+		response = make_response()
+		response.headers.add("Access-Control-Allow-Origin", "*")
+		response.headers.add('Access-Control-Allow-Headers', "*")
+		response.headers.add('Access-Control-Allow-Methods', "*")
+		return response
+
+	@app.expect(model_mission_conf)		
+	def post(self):
+		try: 
+			formData = request.json
+			region = formData['region']
+			t_mission = formData['t_mission']
+			n_robots = formData['n_robots']
+			robots_weights = formData['robots_weights']
+			
+			response = jsonify({
+				"statusCode": 200,
+				"status": "Mission config applied",
+				"result": "ok"
+				})			
+			response.headers.add('Access-Control-Allow-Origin', '*')
+			return response
+		except Exception as error:
+			return jsonify({
+				"statusCode": 500,
+				"status": "Could not apply configuration",
+				"error": str(error)
+			})
+
+
 
 @ns_robot_fb.route("/")
 class MainClass(Resource):
@@ -118,7 +226,7 @@ class MainClass(Resource):
 			})
 
 
-@ns_kde.route("/")
+@ns_simulation.route("/kde")
 class MainClass(Resource):
 
 	def options(self):
@@ -137,7 +245,7 @@ class MainClass(Resource):
 		response.headers.add('Access-Control-Allow-Origin', '*')
 		return response
 
-@ns_env_sensibility.route("/")
+@ns_simulation.route("/env_sensibility")
 class MainClass(Resource):
 
 	def options(self):
@@ -156,7 +264,35 @@ class MainClass(Resource):
 		response.headers.add('Access-Control-Allow-Origin', '*')
 		return response
 
-@ns_robots_pos.route("/")
+@ns_simulation.route('/isl/')
+class MainClass(Resource):
+	def get(self):
+		isl = simulation.get_isl()
+		response = jsonify({
+				"statusCode": 200,
+				"isl": isl.tolist()
+			})
+		
+		response.headers.add('Access-Control-Allow-Origin', '*')
+		return response
+
+@ns_simulation.route("/particles/minLon:<minLon>&maxLon:<maxLon>&minLat:<minLat>&maxLat:<maxLat>")
+@ns_simulation.param('minLon', 'Min Longitude')
+@ns_simulation.param('maxLon', 'Max Longitude')
+@ns_simulation.param('minLat', 'Min Latitude')
+@ns_simulation.param('maxLat', 'Max Latitude')
+class MainClass(Resource):
+	def get(self, minLon, maxLon, minLat, maxLat):
+		particles = simulation.get_particles(float(minLon), float(maxLon), float(minLat), float(maxLat))
+		response = jsonify({
+				"statusCode": 200,
+				"particles": particles.tolist()
+			})
+		
+		response.headers.add('Access-Control-Allow-Origin', '*')
+		return response
+
+@ns_mission.route("/robots_pos")
 class MainClass(Resource):
 
 	def options(self):
@@ -177,31 +313,7 @@ class MainClass(Resource):
 		response.headers.add('Access-Control-Allow-Origin', '*')
 		return response
 
-@ns_variables.route('/region/')
-class MainClass(Resource):
-	def get(self):
-		region = simulation.get_region()
-		response = jsonify({
-				"statusCode": 200,
-				"region": region.tolist()
-			})
-		
-		response.headers.add('Access-Control-Allow-Origin', '*')
-		return response
-
-@ns_variables.route('/isl/')
-class MainClass(Resource):
-	def get(self):
-		isl = simulation.get_isl()
-		response = jsonify({
-				"statusCode": 200,
-				"isl": isl.tolist()
-			})
-		
-		response.headers.add('Access-Control-Allow-Origin', '*')
-		return response
-
-@ns_variables.route("/robots_lon_lat/")
+@ns_mission.route("/robots_lon_lat/")
 class MainClass(Resource):
 	def get(self):
 		robots_lon_lat = simulation.get_robots_lon_lat()
@@ -214,17 +326,13 @@ class MainClass(Resource):
 		response.headers.add('Access-Control-Allow-Origin', '*')
 		return response
 
-@ns_variables.route("/particles/minLon:<minLon>&maxLon:<maxLon>&minLat:<minLat>&maxLat:<maxLat>")
-@ns_variables.param('minLon', 'Min Longitude')
-@ns_variables.param('maxLon', 'Max Longitude')
-@ns_variables.param('minLat', 'Min Latitude')
-@ns_variables.param('maxLat', 'Max Latitude')
+@ns_mission.route('/region/')
 class MainClass(Resource):
-	def get(self, minLon, maxLon, minLat, maxLat):
-		particles = simulation.get_particles(float(minLon), float(maxLon), float(minLat), float(maxLat))
+	def get(self):
+		region = simulation.get_region()
 		response = jsonify({
 				"statusCode": 200,
-				"particles": particles.tolist()
+				"region": region.tolist()
 			})
 		
 		response.headers.add('Access-Control-Allow-Origin', '*')
