@@ -52,9 +52,16 @@ model_simul_conf = app.model('Conf Simulation params', {
 		'maxLat': fields.Float(required = False, description="Simulation area max latitude")
 	})
 
-t_g = 3 * 60			# default time step simulation (seconds)
-t_w = 24 * 60 * 60		# default time step to download new weather data (seconds)
+# Default values for simulation and mission parameters
+t_g = 3 * 60			# time step simulation (seconds)
+t_w = 24 * 60 * 60		# time step to download new weather data (seconds)
+maxLat = -8.5
+minLat = -11
+maxLon = -34
+minLon = -36.5
 
+t_mission = 0
+n_robots = 0
 region = 'assets/region.kml'
 
 simulation = None
@@ -63,18 +70,22 @@ weatherConditions = None
 # HTML rendering
 @flask_app.route('/index', methods=['GET'])
 def display_conf():
-	return render_template('index.html')
+	return render_template('index.html', \
+		t_g=t_g/60, t_w=t_w/(60*60), minLon=minLon, maxLon=maxLon, minLat=minLat, maxLat=maxLat, \
+			n_robots=n_robots, region=region, t_mission=t_mission)
 
 
 @flask_app.route('/start', methods=['POST'])
 def display_started():
-	#if weatherConditions == None:
-	weatherConditions = WeatherConditions(t_w)
+	global simulation
+	global weatherConditions
+	if weatherConditions == None:
+		weatherConditions = WeatherConditions(t_w)
 	
 	weatherConditions.start()
 
-	#if simulation == None:
-	simulation = Simulation(t_g, region)
+	if simulation == None:
+		simulation = Simulation(t_g, region)
 
 	simulation.start()
 
@@ -151,8 +162,6 @@ class MainClass(Resource):
 				"status": "Could not apply configuration",
 				"error": str(error)
 			})
-
-
 
 @ns_robot_fb.route("/")
 class MainClass(Resource):
