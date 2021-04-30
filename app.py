@@ -66,30 +66,46 @@ region = 'assets/region.kml'
 
 simulation = None
 weatherConditions = None
+mission = None
 
 # HTML rendering
 @flask_app.route('/index', methods=['GET'])
-def display_conf():
-	return render_template('index.html', \
-		t_g=t_g/60, t_w=t_w/(60*60), minLon=minLon, maxLon=maxLon, minLat=minLat, maxLat=maxLat, \
-			n_robots=n_robots, region=region, t_mission=t_mission)
+def display_index():
+	if (simulation == None):
+		return display_config_simul()
+	else:
+		return display_viz()
 
+@flask_app.route('/config_simul', methods=['POST'])
+def display_config_simul():
+	return render_template('config_simul.html', \
+		t_g=t_g/60, t_w=t_w/(60*60), minLon=minLon, maxLon=maxLon, minLat=minLat, maxLat=maxLat)
+
+@flask_app.route('/config_mission', methods=['POST'])
+def display_config_mission():
+	return render_template('config_mission.html', \
+		n_robots=n_robots, region=region, t_mission=t_mission)
+
+@flask_app.route('/viz', methods=['POST'])
+def display_viz():
+	return render_template('viz.html')
 
 @flask_app.route('/start', methods=['POST'])
 def display_started():
 	global simulation
 	global weatherConditions
-	if weatherConditions == None:
+
+	if (weatherConditions == None):
 		weatherConditions = WeatherConditions(t_w)
-	
+		
 	weatherConditions.start()
 
-	if simulation == None:
+	if (simulation == None):
 		simulation = Simulation(t_g, region)
-
+	
 	simulation.start()
 
-	return render_template('started_simul.html')
+	return display_viz()
 
 @flask_app.route('/stop', methods=['POST'])
 def display_stoped():

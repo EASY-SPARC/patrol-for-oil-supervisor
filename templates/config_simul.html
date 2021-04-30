@@ -1,0 +1,72 @@
+{% extends "base.html" %} {% block head %}
+<script src="https://polyfill.io/v3/polyfill.min.js?features=default"></script>
+<script type="text/javascript" src="{{ url_for('static',filename='js/config_simul.js') }}"></script>
+<link rel="stylesheet" href="{{ url_for('static',filename='css/style.css') }}" /> {% endblock %} {% block content %}
+
+<div class="container">
+    <form action="/start" method="post">
+        <div class="row justify-content-md-center">
+            <h3 class="text-center">Simulation configuration</h3>
+            <div class="col-md">
+                <div class="mb-3">
+                    <label for="t_g_input" class="form-label">Simulation interval (minutes)</label>
+                    <input class="form-control" id="t_g_input" value="{{ t_g }}" }>
+                </div>
+                <div class="mb-3">
+                    <label for="t_w_input" class="form-label">Weather variables acquisition interval (days)</label>
+                    <input class="form-control" id="t_w_input" value="{{ t_w }}">
+                </div>
+                <div class="mb-3">
+                    <label for="maxLat_input" class="form-label">Simulation Region: North (degrees)</label>
+                    <input class="form-control" onchange="updatePolygon()" id="maxLat_input" value="{{ maxLat }}">
+                </div>
+                <div class="mb-3">
+                    <label for="minLat_input" class="form-label">Simulation Region: South (degrees)</label>
+                    <input class="form-control" onchange="updatePolygon()" id="minLat_input" value="{{ minLat }}">
+                </div>
+                <div class="mb-3">
+                    <label for="maxLon_input" class="form-label">Simulation Region: East (degrees)</label>
+                    <input class="form-control" onchange="updatePolygon()" id="maxLon_input" value="{{ maxLon }}">
+                </div>
+                <div class="mb-3">
+                    <label for="minLon_input" class="form-label">Simulation Region: West (degrees)</label>
+                    <input class="form-control" onchange="updatePolygon()" id="minLon_input" value="{{ minLon }}">
+                </div>
+            </div>
+            <div class="col-md">
+                <div id="map_simulation" style="width: 100%; height: 400px"></div>
+                <div id="invalid" style="visibility: hidden">
+                    <div class="alert alert-danger" role="alert">
+                        Coordinates are invalid!
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="row justify-content-md-center">
+            <button id="start" class="btn btn-primary btn-large col-md-3" data-bs-toggle="modal" data-bs-target="#progressModal">
+                <i class="far fa-play-circle"></i>&nbsp;START
+            </button>
+        </div>
+    </form>
+
+    <!-- Modal -->
+    <div class="modal fade" id="progressModal" tabindex="-1" aria-labelledby="progressModalLabel" aria-hidden="true">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header row justify-content-md-center">
+                    <h5 class="modal-title" id="progressModalLabel">Processing request</h5>
+                    <!--<button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>-->
+                </div>
+                <div class="modal-body row justify-content-md-center">
+                    <div class="spinner-border text-primary" role="status">
+                        <span class="visually-hidden">Loading...</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %} {% block endbody %}
+<!-- Async script executes immediately and must be after any DOM elements used in callback. -->
+<script src="https://maps.googleapis.com/maps/api/js?key=AIzaSyBMrfiNdxKtbtH4b4WcSN3npLmnK7Q1--g&callback=initMap&v=weekly" async></script>
+{% endblock %}

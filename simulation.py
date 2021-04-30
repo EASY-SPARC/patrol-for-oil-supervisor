@@ -69,10 +69,10 @@ class Simulation(object):
                 cnt += 1
 
         # Filtering ISL
-        idx = np.where(self.isl[:, 1] >= self.minLat)[0]
+        idx = np.where(self.isl[:, 1] >= self.minLat - 1)[0]
         isl_filtered = self.isl[idx, :]
 
-        idx = np.where(isl_filtered[:, 1] <= self.maxLat)[0]
+        idx = np.where(isl_filtered[:, 1] <= self.maxLat + 1)[0]
         isl_filtered = isl_filtered[idx, :]
 
         # Gaussians ISL-centered as potential fields

@@ -1,0 +1,21 @@
+{% extends "base.html" %} {% block head %}
+<script src="https://polyfill.io/v3/polyfill.min.js?features=default"></script>
+<script type="application/javascript" charset="utf-8" src="{{ url_for('static',filename='js/viz.js') }}"></script>
+<link rel="stylesheet" href="{{ url_for('static',filename='css/viz.css') }}" /> {% endblock %} {% block content %}
+
+<div class="container">
+    <div class="row justify-content-md-center">
+        <button onclick="toggleParticles()" class="btn btn-primary btn-large">Toggle Particles</button>
+        <button onclick="toggleISL()" class="btn btn-primary btn-large">Toogle ISL</button>
+        <button onclick="toggleRobots()" class="btn btn-primary btn-large">Toogle Robots</button>
+        <button onclick="toggleRegion()" class="btn btn-primary btn-large">Toogle Region of Interest</button>
+        <form action="/config_mission" method="post">
+            <button class="btn btn-primary btn-large">Configure Mission</button>
+        </form>
+    </div>
+    <div class="row" id="map"></div>
+</div>
+{% endblock %} {% block endbody %}
+<!-- Async script executes immediately and must be after any DOM elements used in callback. -->
+<script src="https://maps.googleapis.com/maps/api/js?key=AIzaSyBMrfiNdxKtbtH4b4WcSN3npLmnK7Q1--g&callback=initMap&libraries=visualization&v=weekly" async></script>
+{% endblock %}
