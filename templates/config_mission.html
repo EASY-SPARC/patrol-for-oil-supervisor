@@ -1,41 +1,13 @@
 {% extends "base.html" %} {% block head %}
 <script src="https://polyfill.io/v3/polyfill.min.js?features=default"></script>
-<script type="application/javascript" src="{{ url_for('static',filename='js/index.js') }}"></script>
-{% endblock %} {% block content %}
+<script type="application/javascript" src="{{ url_for('static',filename='js/config_mission.js') }}"></script>
+<link rel="stylesheet" href="{{ url_for('static',filename='css/style.css') }}" /> {% endblock %} {% block content %}
 
 <div class="container">
-    <form action="/start" method="post">
+    <form action="/saved_mission" method="post">
         <div class="row">
+            <h3 class="text-center">Mission configuration</h3>
             <div class="col-md">
-                <h3 class="text-center">Simulation configuration</h3>
-                <div class="mb-3">
-                    <label for="t_g_input" class="form-label">Simulation interval (minutes)</label>
-                    <input class="form-control" id="t_g_input" value="{{ t_g }}" }>
-                </div>
-                <div class="mb-3">
-                    <label for="t_w_input" class="form-label">Weather variables acquisition interval (days)</label>
-                    <input class="form-control" id="t_w_input" value="{{ t_w }}">
-                </div>
-                <div class="mb-3">
-                    <label for="maxLat_input" class="form-label">Simulation Region: North (degrees)</label>
-                    <input class="form-control" id="maxLat_input" value="{{ maxLat }}">
-                </div>
-                <div class="mb-3">
-                    <label for="minLat_input" class="form-label">Simulation Region: South (degrees)</label>
-                    <input class="form-control" id="minLat_input" value="{{ minLat }}">
-                </div>
-                <div class="mb-3">
-                    <label for="maxLon_input" class="form-label">Simulation Region: East (degrees)</label>
-                    <input class="form-control" id="maxLon_input" value="{{ maxLon }}">
-                </div>
-                <div class="mb-3">
-                    <label for="minLon_input" class="form-label">Simulation Region: West (degrees)</label>
-                    <input class="form-control" id="minLon_input" value="{{ minLon }}">
-                </div>
-                <div id="map_simulation"></div>
-            </div>
-            <div class="col-md">
-                <h3 class="text-center">Mission configuration</h3>
                 <div class="mb-3">
                     <label for="regionFile" class="form-label">Region of Interest file:</label>
                     <input class="form-control" type="file" id="regionFile" value="{{ region }}">
@@ -47,17 +19,19 @@
                 <div class="mb-3">
                     <label for="n_robots_input" class="form-label">Number of robots</label>
                     <div class="input-group">
-                        <input readonly type="text" class="form-control" value="{{ n_robots }}" id="n_robots_input">
+                        <input readonly type="text" class="form-control" value="{{ robots|length }}" id="n_robots_input">
                         <a class="btn btn-outline-secondary" type="button"><i class="fas fa-minus-circle"></i></a>
                         <a class="btn btn-outline-secondary" type="button"><i class="fas fa-plus-circle"></i></a>
                     </div>
                 </div>
-                <div id="map_mission"></div>
+            </div>
+            <div class="col-md">
+                <div id="map_mission" style="width: 100%; height: 400px"></div>
             </div>
         </div>
         <div class="row justify-content-md-center">
             <button class="btn btn-primary btn-large col-md-3" data-bs-toggle="modal" data-bs-target="#progressModal">
-                <i class="far fa-play-circle"></i>&nbsp;START
+                <i class="fas fa-plane-departure"></i>&nbsp;SAVE
             </button>
         </div>
     </form>

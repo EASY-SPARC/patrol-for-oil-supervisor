@@ -3,6 +3,7 @@ let heatmap;
 let robots_markers, robots_drawn;
 let region, polygon, region_drawn;
 let isl_markers, isl_drawn;
+let configured_mission;
 
 var interval = setInterval(run, 3000); // 3 seconds repeat
 
@@ -14,7 +15,7 @@ function initMap() {
         mapTypeId: "roadmap",
     });
 
-    // KDE
+    // Particles
     $.getJSON({
         url: 'http://127.0.0.1:5000/simulation/particles/minLon:-35.3&maxLon:-34.9&minLat:-9.35&maxLat:-8.9',
         success: function(data) {
@@ -25,48 +26,6 @@ function initMap() {
                 radius: 20
             });
 
-        }
-    });
-
-    // Robots
-    $.getJSON({
-        url: 'http://127.0.0.1:5000/simulation/robots_lon_lat/',
-        success: function(data) {
-
-            var robots_lon_lat = data.robots_lon_lat;
-            var robots_heading = data.robots_heading;
-
-            robots_markers = [];
-            for (var i = 0; i < robots_lon_lat.length; i++) {
-                robots_markers.push(new google.maps.Marker({
-                    position: { lat: robots_lon_lat[i][1], lng: robots_lon_lat[i][0] },
-                    map,
-                    title: "Robot " + i + '; Lon:' + robots_lon_lat[i][0] + ', Lat: ' + robots_lon_lat[i][1] + ', H: ' + robots_heading[i],
-                }))
-            }
-
-            robots_drawn = true;
-
-        }
-    });
-
-    // Region
-    $.getJSON({
-        url: 'http://127.0.0.1:5000/mission/region/',
-        success: function(data) {
-
-            var outerCoords = [];
-            for (var i = 0; i < data.region.length; i++) {
-                outerCoords.push({ lat: data.region[i][1], lng: data.region[i][0] });
-            }
-
-            polygon = new google.maps.Data.Polygon([outerCoords]);
-
-            region = map.data.add({
-                geometry: polygon
-            });
-
-            region_drawn = true;
         }
     });
 
@@ -91,9 +50,60 @@ function initMap() {
         }
     });
 
+    // Checking if mission is configured
+    if ($("#robots_button").length == 0) {
+        configured_mission = false;
+    } else {
+        configured_mission = true;
+    }
+
+    if (configured_mission) {
+        // Robots
+        $.getJSON({
+            url: 'http://127.0.0.1:5000/mission/robots_lon_lat/',
+            success: function(data) {
+
+                var robots_lon_lat = data.robots_lon_lat;
+                var robots_heading = data.robots_heading;
+
+                robots_markers = [];
+                for (var i = 0; i < robots_lon_lat.length; i++) {
+                    robots_markers.push(new google.maps.Marker({
+                        position: { lat: robots_lon_lat[i][1], lng: robots_lon_lat[i][0] },
+                        map,
+                        title: "Robot " + i + '; Lon:' + robots_lon_lat[i][0] + ', Lat: ' + robots_lon_lat[i][1] + ', H: ' + robots_heading[i],
+                    }))
+                }
+
+                robots_drawn = true;
+
+            }
+        });
+
+        // Region
+        $.getJSON({
+            url: 'http://127.0.0.1:5000/mission/region/',
+            success: function(data) {
+
+                var outerCoords = [];
+                for (var i = 0; i < data.region.length; i++) {
+                    outerCoords.push({ lat: data.region[i][1], lng: data.region[i][0] });
+                }
+
+                polygon = new google.maps.Data.Polygon([outerCoords]);
+
+                region = map.data.add({
+                    geometry: polygon
+                });
+
+                region_drawn = true;
+            }
+        });
+    }
+
 }
 
-function toggleKDE() {
+function toggleParticles() {
     heatmap.setMap(heatmap.getMap() ? null : map);
 }
 
@@ -169,19 +179,21 @@ function run() {
         }
     });
 
-    // Robots
-    $.getJSON({
-        url: 'http://127.0.0.1:5000/simulation/robots_lon_lat/',
-        success: function(data) {
+    if (configured_mission) {
+        // Robots
+        $.getJSON({
+            url: 'http://127.0.0.1:5000/mission/robots_lon_lat/',
+            success: function(data) {
 
-            var robots_lon_lat = data.robots_lon_lat;
-            var robots_heading = data.robots_heading;
+                var robots_lon_lat = data.robots_lon_lat;
+                var robots_heading = data.robots_heading;
 
-            for (var i = 0; i < robots_markers.length; i++) {
-                robots_markers[i].setPosition({ lat: robots_lon_lat[i][1], lng: robots_lon_lat[i][0] });
-                robots_markers[i].setTitle('Robot ' + i + '; Lon:' + robots_lon_lat[i][0] + ', Lat: ' + robots_lon_lat[i][1] + ', H: ' + robots_heading[i])
+                for (var i = 0; i < robots_markers.length; i++) {
+                    robots_markers[i].setPosition({ lat: robots_lon_lat[i][1], lng: robots_lon_lat[i][0] });
+                    robots_markers[i].setTitle('Robot ' + i + '; Lon:' + robots_lon_lat[i][0] + ', Lat: ' + robots_lon_lat[i][1] + ', H: ' + robots_heading[i])
+                }
+
             }
-
-        }
-    });
+        });
+    }
 }

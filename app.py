@@ -9,6 +9,7 @@ import json
 
 from simulation import Simulation
 from weather_conditions import WeatherConditions
+from mission import Mission
 
 flask_app = Flask(__name__)
 app = Api(app = flask_app, 
@@ -46,10 +47,10 @@ model_mission_conf = app.model('Configure mission', {
 model_simul_conf = app.model('Conf Simulation params', {
 		't_g': fields.Float(required = True, description="Time interval for gnome simulation"),
 		't_w': fields.Float(required = True, description="Time interval for weather parameters update"),
-		'minLon': fields.Float(required = False, description="Simulation area min longitude"),
-		'maxLon': fields.Float(required = False, description="Simulation area max longitude"),
-		'minLat': fields.Float(required = False, description="Simulation area min latitude"),
-		'maxLat': fields.Float(required = False, description="Simulation area max latitude")
+		'north': fields.Float(required = False, description="Simulation area max latitude"),
+		'south': fields.Float(required = False, description="Simulation area min latitude"),
+		'east': fields.Float(required = False, description="Simulation area max longitude"),
+		'west': fields.Float(required = False, description="Simulation area min longitude")
 	})
 
 # Default values for simulation and mission parameters
@@ -61,7 +62,7 @@ maxLon = -34
 minLon = -36.5
 
 t_mission = 0
-n_robots = 0
+robots = []
 region = 'assets/region.kml'
 
 simulation = None
@@ -84,11 +85,15 @@ def display_config_simul():
 @flask_app.route('/config_mission', methods=['POST'])
 def display_config_mission():
 	return render_template('config_mission.html', \
-		n_robots=n_robots, region=region, t_mission=t_mission)
+		robots=robots, region=region, t_mission=t_mission)
 
 @flask_app.route('/viz', methods=['POST'])
 def display_viz():
-	return render_template('viz.html')
+	global mission
+
+	configured_mission = False if mission == None else True
+
+	return render_template('viz.html', configured_mission=configured_mission)
 
 @flask_app.route('/start', methods=['POST'])
 def display_started():
@@ -107,24 +112,19 @@ def display_started():
 
 	return display_viz()
 
-@flask_app.route('/stop', methods=['POST'])
+@flask_app.route('/saved_mission', methods=['POST'])
 def display_stoped():
-	weatherConditions.stop()
-	simulation.stop()
+	global mission
 
-	return render_template('stoped_simul.html')
+	mission = Mission(t_mission, region, robots, simulation)
+
+	simulation.set_mission(mission)
+
+	return display_viz()
 
 # API requests
 @ns_config.route("/simlation")
 class MainClass(Resource):
-
-	def options(self):
-		response = make_response()
-		response.headers.add("Access-Control-Allow-Origin", "*")
-		response.headers.add('Access-Control-Allow-Headers', "*")
-		response.headers.add('Access-Control-Allow-Methods', "*")
-		return response
-
 	@app.expect(model_simul_conf)		
 	def post(self):
 		try: 
@@ -148,14 +148,6 @@ class MainClass(Resource):
 
 @ns_config.route("/mission")
 class MainClass(Resource):
-
-	def options(self):
-		response = make_response()
-		response.headers.add("Access-Control-Allow-Origin", "*")
-		response.headers.add('Access-Control-Allow-Headers', "*")
-		response.headers.add('Access-Control-Allow-Methods', "*")
-		return response
-
 	@app.expect(model_mission_conf)		
 	def post(self):
 		try: 
@@ -181,14 +173,6 @@ class MainClass(Resource):
 
 @ns_robot_fb.route("/")
 class MainClass(Resource):
-
-	def options(self):
-		response = make_response()
-		response.headers.add("Access-Control-Allow-Origin", "*")
-		response.headers.add('Access-Control-Allow-Headers', "*")
-		response.headers.add('Access-Control-Allow-Methods', "*")
-		return response
-
 	@app.expect(model_robot_fb)		
 	def post(self):
 		try: 
@@ -202,7 +186,7 @@ class MainClass(Resource):
 			if formData['lat'] != '':
 				lat = np.fromstring(formData['lat'].replace('[', '').replace(']', ''), dtype=float, sep=',')
 
-			simulation.robot_feedback(robot_id, xgrid, ygrid, robot_heading, lon, lat)
+			mission.robot_feedback(robot_id, xgrid, ygrid, robot_heading, lon, lat)
 			
 			response = jsonify({
 				"statusCode": 200,
@@ -220,14 +204,6 @@ class MainClass(Resource):
 
 @ns_report_oil.route("/")
 class MainClass(Resource):
-
-	def options(self):
-		response = make_response()
-		response.headers.add("Access-Control-Allow-Origin", "*")
-		response.headers.add('Access-Control-Allow-Headers', "*")
-		response.headers.add('Access-Control-Allow-Methods', "*")
-		return response
-
 	@app.expect(model_report_oil)		
 	def post(self):
 		try: 
@@ -253,16 +229,8 @@ class MainClass(Resource):
 
 @ns_simulation.route("/kde")
 class MainClass(Resource):
-
-	def options(self):
-		response = make_response()
-		response.headers.add("Access-Control-Allow-Origin", "*")
-		response.headers.add('Access-Control-Allow-Headers', "*")
-		response.headers.add('Access-Control-Allow-Methods', "*")
-		return response
-
 	def get(self):
-		kde = simulation.get_kde()
+		kde = mission.get_kde()
 		response = jsonify({
 				"statusCode": 200,
 				"kde": kde.tolist()
@@ -272,14 +240,6 @@ class MainClass(Resource):
 
 @ns_simulation.route("/env_sensibility")
 class MainClass(Resource):
-
-	def options(self):
-		response = make_response()
-		response.headers.add("Access-Control-Allow-Origin", "*")
-		response.headers.add('Access-Control-Allow-Headers', "*")
-		response.headers.add('Access-Control-Allow-Methods', "*")
-		return response
-
 	def get(self):
 		env_sensibility = simulation.get_env_sensibility()
 		response = jsonify({
@@ -319,16 +279,8 @@ class MainClass(Resource):
 
 @ns_mission.route("/robots_pos")
 class MainClass(Resource):
-
-	def options(self):
-		response = make_response()
-		response.headers.add("Access-Control-Allow-Origin", "*")
-		response.headers.add('Access-Control-Allow-Headers', "*")
-		response.headers.add('Access-Control-Allow-Methods', "*")
-		return response
-
 	def get(self):
-		robots_pos = simulation.get_robots_pos()
+		robots_pos = mission.get_robots_pos()
 		robots_heading = simulation.get_robots_heading()
 		response = jsonify({
 				"statusCode": 200,
@@ -341,8 +293,8 @@ class MainClass(Resource):
 @ns_mission.route("/robots_lon_lat/")
 class MainClass(Resource):
 	def get(self):
-		robots_lon_lat = simulation.get_robots_lon_lat()
-		robots_heading = simulation.get_robots_heading()
+		robots_lon_lat = mission.get_robots_lon_lat()
+		robots_heading = mission.get_robots_heading()
 		response = jsonify({
 				"statusCode": 200,
 				"robots_lon_lat": robots_lon_lat.tolist(),
@@ -354,7 +306,7 @@ class MainClass(Resource):
 @ns_mission.route('/region/')
 class MainClass(Resource):
 	def get(self):
-		region = simulation.get_region()
+		region = mission.get_region()
 		response = jsonify({
 				"statusCode": 200,
 				"region": region.tolist()
