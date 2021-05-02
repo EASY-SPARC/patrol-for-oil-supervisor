@@ -10,27 +10,27 @@
             <div class="col-md">
                 <div class="mb-3">
                     <label for="t_g_input" class="form-label">Simulation interval (minutes)</label>
-                    <input class="form-control" id="t_g_input" value="{{ t_g }}" }>
+                    <input class="form-control" id="t_g_input" name="t_g" value="{{ t_g }}" }>
                 </div>
                 <div class="mb-3">
                     <label for="t_w_input" class="form-label">Weather variables acquisition interval (days)</label>
-                    <input class="form-control" id="t_w_input" value="{{ t_w }}">
+                    <input class="form-control" id="t_w_input" name="t_w" value="{{ t_w }}">
                 </div>
                 <div class="mb-3">
                     <label for="maxLat_input" class="form-label">Simulation Region: North (degrees)</label>
-                    <input class="form-control" onchange="updatePolygon()" id="maxLat_input" value="{{ maxLat }}">
+                    <input class="form-control" onchange="updatePolygon()" name="north" id="maxLat_input" value="{{ maxLat }}">
                 </div>
                 <div class="mb-3">
                     <label for="minLat_input" class="form-label">Simulation Region: South (degrees)</label>
-                    <input class="form-control" onchange="updatePolygon()" id="minLat_input" value="{{ minLat }}">
+                    <input class="form-control" onchange="updatePolygon()" name="south" id="minLat_input" value="{{ minLat }}">
                 </div>
                 <div class="mb-3">
                     <label for="maxLon_input" class="form-label">Simulation Region: East (degrees)</label>
-                    <input class="form-control" onchange="updatePolygon()" id="maxLon_input" value="{{ maxLon }}">
+                    <input class="form-control" onchange="updatePolygon()" name="east" id="maxLon_input" value="{{ maxLon }}">
                 </div>
                 <div class="mb-3">
                     <label for="minLon_input" class="form-label">Simulation Region: West (degrees)</label>
-                    <input class="form-control" onchange="updatePolygon()" id="minLon_input" value="{{ minLon }}">
+                    <input class="form-control" onchange="updatePolygon()" name="west" id="minLon_input" value="{{ minLon }}">
                 </div>
             </div>
             <div class="col-md">
@@ -43,7 +43,7 @@
             </div>
         </div>
         <div class="row justify-content-md-center">
-            <button id="start" class="btn btn-primary btn-large col-md-3" data-bs-toggle="modal" data-bs-target="#progressModal">
+            <button type="submit" id="start" class="btn btn-primary btn-large col-md-3" data-bs-toggle="modal" data-bs-target="#progressModal">
                 <i class="far fa-play-circle"></i>&nbsp;START
             </button>
         </div>

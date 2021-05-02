@@ -10,19 +10,36 @@
             <div class="col-md">
                 <div class="mb-3">
                     <label for="regionFile" class="form-label">Region of Interest file:</label>
-                    <input class="form-control" type="file" id="regionFile" value="{{ region }}">
+                    <input class="form-control" type="file" id="regionFile" name="region" value="{{ region }}">
                 </div>
                 <div class="mb-3">
                     <label for="t_mission_input" class="form-label">Mission time (s)</label>
-                    <input class="form-control" id="t_mission_input" value="{{ t_mission }}">
+                    <input class="form-control" id="t_mission_input" name="t_mission" value="{{ t_mission }}">
                 </div>
                 <div class="mb-3">
-                    <label for="n_robots_input" class="form-label">Number of robots</label>
+                    <label for="n_robots_input" class="form-label">Number of vehicles</label>
                     <div class="input-group">
-                        <input readonly type="text" class="form-control" value="{{ robots|length }}" id="n_robots_input">
-                        <a class="btn btn-outline-secondary" type="button"><i class="fas fa-minus-circle"></i></a>
-                        <a class="btn btn-outline-secondary" type="button"><i class="fas fa-plus-circle"></i></a>
+                        <input readonly type="text" name="n_robots" class="form-control" value="{{ robots|length }}" id="n_robots_input">
+                        <a class="btn btn-outline-secondary" onclick="subtractRobots()" type="button"><i class="fas fa-minus-circle"></i></a>
+                        <a class="btn btn-outline-secondary" onclick="addRobots()" type="button"><i class="fas fa-plus-circle"></i></a>
                     </div>
+                </div>
+                <div class="mb-3">
+                    <table id="robots_table" class="table table-hover">
+                        <thead class="thead-primary">
+                            <tr>
+                                <th scope="col">Vehicle</th>
+                                <th scope="col">&kappa;<sub>i</sub></th>
+                                <th scope="col">&omega;<sub>ci</sub></th>
+                                <th scope="col">&omega;<sub>si</sub></th>
+                                <th scope="col">&omega;<sub>di</sub></th>
+                                <th scope="col">&omega;<sub>ni</sub></th>
+                            </tr>
+                        </thead>
+                        <tbody>
+
+                        </tbody>
+                    </table>
                 </div>
             </div>
             <div class="col-md">

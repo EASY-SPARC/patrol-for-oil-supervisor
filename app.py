@@ -56,10 +56,10 @@ model_simul_conf = app.model('Conf Simulation params', {
 # Default values for simulation and mission parameters
 t_g = 3 * 60			# time step simulation (seconds)
 t_w = 24 * 60 * 60		# time step to download new weather data (seconds)
-maxLat = -8.5
-minLat = -11
-maxLon = -34
-minLon = -36.5
+north = -8.5
+south = -11
+east = -34
+west = -36.5
 
 t_mission = 0
 robots = []
@@ -77,16 +77,6 @@ def display_index():
 	else:
 		return display_viz()
 
-@flask_app.route('/config_simul', methods=['POST'])
-def display_config_simul():
-	return render_template('config_simul.html', \
-		t_g=t_g/60, t_w=t_w/(60*60), minLon=minLon, maxLon=maxLon, minLat=minLat, maxLat=maxLat)
-
-@flask_app.route('/config_mission', methods=['POST'])
-def display_config_mission():
-	return render_template('config_mission.html', \
-		robots=robots, region=region, t_mission=t_mission)
-
 @flask_app.route('/viz', methods=['POST'])
 def display_viz():
 	global mission
@@ -95,13 +85,53 @@ def display_viz():
 
 	return render_template('viz.html', configured_mission=configured_mission)
 
+@flask_app.route('/config_simul', methods=['POST'])
+def display_config_simul():
+	return render_template('config_simul.html', \
+		t_g=t_g/60, t_w=t_w/(24*60*60), minLon=west, maxLon=east, minLat=south, maxLat=north)
+
+@flask_app.route('/saved_mission', methods=['POST'])
+def display_stoped():
+	global mission
+	global t_mission, region, robots
+
+	t_mission = float(request.form['t_mission'])
+	region = request.form['region']
+	n_robots = int(request.form['n_robots'])
+
+	mission = Mission(t_mission, region, robots, simulation)
+
+	simulation.set_mission(mission)
+
+	return display_viz()
+
+@flask_app.route('/config_mission', methods=['POST'])
+def display_config_mission():
+
+	print(t_g)
+	print(t_w)
+	return render_template('config_mission.html', \
+		robots=robots, region=region, t_mission=t_mission)
+
+
 @flask_app.route('/start', methods=['POST'])
 def display_started():
 	global simulation
 	global weatherConditions
+	global t_g, t_w, north, south, east, west
+
+	t_g = float(request.form['t_g']) * 60
+	t_w = float(request.form['t_w']) * 24 * 60 * 60
+	north = float(request.form['north'])
+	south = float(request.form['south'])
+	east = float(request.form['east'])
+	west = float(request.form['west'])
+	
+	print(t_g)
+	print(t_w)
 
 	if (weatherConditions == None):
-		weatherConditions = WeatherConditions(t_w)
+		weatherConditions = WeatherConditions(t_w, north, south, east, west)
 		
 	weatherConditions.start()
 
@@ -112,15 +142,7 @@ def display_started():
 
 	return display_viz()
 
-@flask_app.route('/saved_mission', methods=['POST'])
-def display_stoped():
-	global mission
 
-	mission = Mission(t_mission, region, robots, simulation)
-
-	simulation.set_mission(mission)
-
-	return display_viz()
 
 # API requests
 @ns_config.route("/simlation")
@@ -131,6 +153,10 @@ class MainClass(Resource):
 			formData = request.json
 			t_g = formData['t_g']
 			t_w = formData['t_w']
+			north = formData['north']
+			south = formData['south']
+			east = formData['east']
+			west = formData['west']
 			
 			response = jsonify({
 				"statusCode": 200,

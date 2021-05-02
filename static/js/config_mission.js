@@ -17,3 +17,26 @@ function initMap() {
         map: map_mission,
     });
 }
+
+function addRobots() {
+    var i = parseInt($("#n_robots_input").val()) + 1
+    $("#n_robots_input").val(i);
+
+    $('#robots_table > tbody:last-child').append(`<tr id="robot` + i + `">
+    <td>` + i + `</td>
+    <td><input value="0" class="form-control" name="kappa_` + i + `"></td>
+    <td><input value="0" class="form-control" name="omega_c` + i + `"></td>
+    <td><input value="0" class="form-control" name="omega_s` + i + `"></td>
+    <td><input value="0" class="form-control" name="omega_d` + i + `"></td>
+    <td><input value="0" class="form-control" name="omega_n` + i + `"></td>
+    </tr>`);
+}
+
+function subtractRobots() {
+    var new_value = parseInt($("#n_robots_input").val()) - 1;
+    if (new_value > 0) {
+        $("#n_robots_input").val(parseInt($("#n_robots_input").val()) - 1);
+
+        $('#robots_table > tbody:last-child > tr:last').remove();
+    }
+}
