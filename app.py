@@ -264,7 +264,7 @@ class MainClass(Resource):
 			})
 
 
-@ns_simulation.route("/kde")
+@ns_mission.route("/kde")
 class MainClass(Resource):
 	def get(self):
 		kde = mission.get_kde()
