@@ -31,7 +31,7 @@ function initMap() {
 
     // ISL
     $.getJSON({
-        url: 'http://127.0.0.1:5000/simulation/isl/',
+        url: 'http://127.0.0.1:5000/simulation/isl',
         success: function(data) {
 
             var isl = data.isl;
@@ -60,7 +60,7 @@ function initMap() {
     if (configured_mission) {
         // Robots
         $.getJSON({
-            url: 'http://127.0.0.1:5000/mission/robots_lon_lat/',
+            url: 'http://127.0.0.1:5000/mission/robots_lon_lat',
             success: function(data) {
 
                 var robots_lon_lat = data.robots_lon_lat;
@@ -82,7 +82,7 @@ function initMap() {
 
         // Region
         $.getJSON({
-            url: 'http://127.0.0.1:5000/mission/region/',
+            url: 'http://127.0.0.1:5000/mission/region',
             success: function(data) {
 
                 var outerCoords = [];
@@ -182,7 +182,7 @@ function run() {
     if (configured_mission) {
         // Robots
         $.getJSON({
-            url: 'http://127.0.0.1:5000/mission/robots_lon_lat/',
+            url: 'http://127.0.0.1:5000/mission/robots_lon_lat',
             success: function(data) {
 
                 var robots_lon_lat = data.robots_lon_lat;

@@ -286,7 +286,7 @@ class MainClass(Resource):
 		response.headers.add('Access-Control-Allow-Origin', '*')
 		return response
 
-@ns_simulation.route('/isl/')
+@ns_simulation.route('/isl')
 class MainClass(Resource):
 	def get(self):
 		isl = simulation.get_isl()
@@ -318,7 +318,7 @@ class MainClass(Resource):
 class MainClass(Resource):
 	def get(self):
 		robots_pos = mission.get_robots_pos()
-		robots_heading = simulation.get_robots_heading()
+		robots_heading = mission.get_robots_heading()
 		response = jsonify({
 				"statusCode": 200,
 				"robots_pos": robots_pos.tolist(),
@@ -327,7 +327,7 @@ class MainClass(Resource):
 		response.headers.add('Access-Control-Allow-Origin', '*')
 		return response
 
-@ns_mission.route("/robots_lon_lat/")
+@ns_mission.route("/robots_lon_lat")
 class MainClass(Resource):
 	def get(self):
 		robots_lon_lat = mission.get_robots_lon_lat()
@@ -340,13 +340,25 @@ class MainClass(Resource):
 		response.headers.add('Access-Control-Allow-Origin', '*')
 		return response
 
-@ns_mission.route('/region/')
+@ns_mission.route('/region')
 class MainClass(Resource):
 	def get(self):
 		region = mission.get_region()
 		response = jsonify({
 				"statusCode": 200,
 				"region": region.tolist()
+			})
+		
+		response.headers.add('Access-Control-Allow-Origin', '*')
+		return response
+
+@ns_mission.route('/robots_weights')
+class MainClass(Resource):
+	def get(self):
+		weights = mission.get_robots_weights()
+		response = jsonify({
+				"statusCode": 200,
+				"weights": weights.tolist()
 			})
 		
 		response.headers.add('Access-Control-Allow-Origin', '*')

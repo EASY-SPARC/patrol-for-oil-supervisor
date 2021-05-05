@@ -16,7 +16,7 @@ class Mission(object):
 
         # --------------------- REMOVE ------------------------
         # Initializing robots positions in grid map
-        for robot in robots:
+        for robot in self.robots:
             robot['pos_x'] = 1
             robot['pos_y'] = 16
 
@@ -139,7 +139,7 @@ class Mission(object):
 
         # Update robot position]
         try:
-            next(robot for robot in self.robots if robot["id"] == robot_id)
+            robot = next(robot for robot in self.robots if robot["id"] == robot_id)
             robot['pos_x'] = xgrid
             robot['pos_y'] = ygrid
             robot['heading'] = robot_heading
@@ -195,3 +195,7 @@ class Mission(object):
 
     def get_region(self):
         return self.coords
+
+    def get_robots_weights(self):
+        robots_weights = np.array([[robot['kappa'], robot['omega_c'], robot['omega_s'], robot['omega_d'], robot['omega_n']] for robot in self.robots])
+        return robots_weights
