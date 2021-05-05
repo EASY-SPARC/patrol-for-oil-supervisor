@@ -4,7 +4,7 @@
 <link rel="stylesheet" href="{{ url_for('static',filename='css/style.css') }}" /> {% endblock %} {% block content %}
 
 <div class="container">
-    <form action="/saved_mission" method="post">
+    <form action="/saved_mission" method="post" enctype="multipart/form-data">
         <div class="row">
             <h3 class="text-center">Mission configuration</h3>
             <div class="col-md">
@@ -37,7 +37,16 @@
                             </tr>
                         </thead>
                         <tbody>
-
+                            {%+ if robots|length > 0 %} {% for robot in robots %}
+                            <tr id="robot{{ robot['id'] }}">
+                                <td>{{robot['id']}}</td>
+                                <td><input value="{{ robot['kappa'] }}" class="form-control" name="kappa_{{ robot['id'] }}"></td>
+                                <td><input value="{{ robot['omega_c'] }}" class="form-control" name="omega_c{{ robot['id'] }}"></td>
+                                <td><input value="{{ robot['omega_s'] }}" class="form-control" name="omega_s{{ robot['id'] }}"></td>
+                                <td><input value="{{ robot['omega_d'] }}" class="form-control" name="omega_d{{ robot['id'] }}"></td>
+                                <td><input value="{{ robot['omega_n'] }}" class="form-control" name="omega_n{{ robot['id'] }}"></td>
+                            </tr>
+                            {% endfor %} {% endif %}
                         </tbody>
                     </table>
                 </div>
@@ -46,10 +55,15 @@
                 <div id="map_mission" style="width: 100%; height: 400px"></div>
             </div>
         </div>
+
         <div class="row justify-content-md-center">
-            <button class="btn btn-primary btn-large col-md-3" data-bs-toggle="modal" data-bs-target="#progressModal">
-                <i class="fas fa-plane-departure"></i>&nbsp;SAVE
-            </button>
+            {%+ if robots|length == 0 %}
+            <button id="save" class="btn btn-primary btn-large col-md-3" data-bs-toggle="modal" data-bs-target="#progressModal" disabled>
+            <i class="fas fa-plane-departure"></i>&nbsp;SAVE
+            </button> {% else %}
+            <button id="save" class="btn btn-primary btn-large col-md-3" data-bs-toggle="modal" data-bs-target="#progressModal">
+            <i class="fas fa-plane-departure"></i>&nbsp;SAVE
+            </button> {% endif %}
         </div>
     </form>
 

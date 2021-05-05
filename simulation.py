@@ -11,7 +11,7 @@ KDE_BW = 0.2        # KDE Bandwidth
 RES_GRID = 111.0    # Grid resolution (km in each cell)
 
 class Simulation(object):
-    def __init__(self, interval, region):
+    def __init__(self, interval):
 
         self._timer     = None
         self.interval   = interval
@@ -22,6 +22,7 @@ class Simulation(object):
         self._gnome = GnomeInterface()
 
         # Read kml and extract coordinates
+        region = "./assets/region.kml"
         with open(region) as regionFile:
             regionString = regionFile.read()
 

@@ -9,21 +9,16 @@ KDE_BW = 0.2        # KDE Bandwidth
 RES_GRID = 111.0    # Grid resolution (km in each cell)
 
 class Mission(object):
-    def __init__(self, t_mission, region, robots, simulation):
+    def __init__(self, t_mission, robots, region, simulation):
         self.simulation = simulation
 
         self.robots = robots
 
         # --------------------- REMOVE ------------------------
         # Initializing robots positions in grid map
-        #self.robots_pos = np.empty(shape=[0,2], dtype=int)
-        self.robots_pos = np.zeros((3, 2), dtype=int)
-        self.robots_heading = np.zeros((3, 1), dtype=float)
-
-        # For tests
-        self.robots_pos[0, :] = [1, 16] 
-        self.robots_pos[1, :] = [1, 17] 
-        self.robots_pos[2, :] = [1, 18] 
+        for robot in robots:
+            robot['pos_x'] = 1
+            robot['pos_y'] = 16
 
         # Read shape file
         shpfile = shapefile.Reader('./assets/shp/BRA_admin_AL.shp')
@@ -143,8 +138,14 @@ class Mission(object):
         print('[ROBOT_FB] Robot ' + str(robot_id) + ' is at ' + str(xgrid) + ', ' + str(ygrid))
 
         # Update robot position]
-        self.robots_pos[robot_id, :] = [xgrid, ygrid]
-        self.robots_heading[robot_id] = robot_heading
+        try:
+            next(robot for robot in self.robots if robot["id"] == robot_id)
+            robot['pos_x'] = xgrid
+            robot['pos_y'] = ygrid
+            robot['heading'] = robot_heading
+        except StopIteration:
+            print('[ROBOT_FB] No robot with id ' + robot_id)
+            return
         
         # Consume existing particles
         particles_idx = self.idx[np.where(np.logical_and(self.binX == xgrid, self.binY == ygrid))[0]]
@@ -177,10 +178,11 @@ class Mission(object):
         return self.kde
     
     def get_robots_pos(self):
-        return self.robots_pos
+        robots_pos = np.array([[robot['pos_x'], robot['pos_y']] for robot in self.robots])
+        return robots_pos
 
     def get_robots_lon_lat(self):
-        robots_lon_lat = np.copy(self.robots_pos).astype('float')
+        robots_lon_lat = np.copy(self.get_robots_pos()).astype('float')
 
         robots_lon_lat[:, 0] = (robots_lon_lat[:, 0]/RES_GRID) + self.minLon
         robots_lon_lat[:, 1] = (robots_lon_lat[:, 1]/RES_GRID) + self.minLat
@@ -188,7 +190,8 @@ class Mission(object):
         return robots_lon_lat
          
     def get_robots_heading(self):
-        return self.robots_heading
+        robots_heading = np.array([robot['heading'] for robot in self.robots])
+        return robots_heading
 
     def get_region(self):
         return self.coords

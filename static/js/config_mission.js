@@ -30,6 +30,10 @@ function addRobots() {
     <td><input value="0" class="form-control" name="omega_d` + i + `"></td>
     <td><input value="0" class="form-control" name="omega_n` + i + `"></td>
     </tr>`);
+
+    if (i > 0) {
+        $("#save").attr("disabled", false);
+    }
 }
 
 function subtractRobots() {

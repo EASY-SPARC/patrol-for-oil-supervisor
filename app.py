@@ -6,12 +6,19 @@ from datetime import datetime, timedelta
 
 import numpy as np
 import json
+import os
 
 from simulation import Simulation
 from weather_conditions import WeatherConditions
 from mission import Mission
 
 flask_app = Flask(__name__)
+
+# Configuring polygon upload folder
+UPLOAD_FOLDER = './assets/uploads'
+flask_app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER
+
+# RESTful APis
 app = Api(app = flask_app, 
 		  version = "1.0", 
 		  title = "Patrol for oil APIs", 
@@ -63,7 +70,7 @@ west = -36.5
 
 t_mission = 0
 robots = []
-region = 'assets/region.kml'
+region = None
 
 simulation = None
 weatherConditions = None
@@ -90,30 +97,6 @@ def display_config_simul():
 	return render_template('config_simul.html', \
 		t_g=t_g/60, t_w=t_w/(24*60*60), minLon=west, maxLon=east, minLat=south, maxLat=north)
 
-@flask_app.route('/saved_mission', methods=['POST'])
-def display_stoped():
-	global mission
-	global t_mission, region, robots
-
-	t_mission = float(request.form['t_mission'])
-	region = request.form['region']
-	n_robots = int(request.form['n_robots'])
-
-	mission = Mission(t_mission, region, robots, simulation)
-
-	simulation.set_mission(mission)
-
-	return display_viz()
-
-@flask_app.route('/config_mission', methods=['POST'])
-def display_config_mission():
-
-	print(t_g)
-	print(t_w)
-	return render_template('config_mission.html', \
-		robots=robots, region=region, t_mission=t_mission)
-
-
 @flask_app.route('/start', methods=['POST'])
 def display_started():
 	global simulation
@@ -126,9 +109,6 @@ def display_started():
 	south = float(request.form['south'])
 	east = float(request.form['east'])
 	west = float(request.form['west'])
-	
-	print(t_g)
-	print(t_w)
 
 	if (weatherConditions == None):
 		weatherConditions = WeatherConditions(t_w, north, south, east, west)
@@ -136,13 +116,44 @@ def display_started():
 	weatherConditions.start()
 
 	if (simulation == None):
-		simulation = Simulation(t_g, region)
+		simulation = Simulation(t_g)
 	
 	simulation.start()
 
 	return display_viz()
 
+@flask_app.route('/config_mission', methods=['POST'])
+def display_config_mission():
 
+	return render_template('config_mission.html', \
+		robots=robots, region=region, t_mission=t_mission)
+
+@flask_app.route('/saved_mission', methods=['POST'])
+def display_stoped():
+	global mission
+	global t_mission, robots, region
+
+	t_mission = float(request.form['t_mission'])
+	n_robots = int(request.form['n_robots'])
+	robots = []
+
+	region = request.files['region']
+	regionFilename = os.path.join(flask_app.config['UPLOAD_FOLDER'], 'region.kml')
+	region.save(regionFilename)
+
+	for i in range(n_robots):
+		kappa = float(request.form['kappa_'+str(i+1)])
+		omega_c = float(request.form['omega_c'+str(i+1)])
+		omega_s = float(request.form['omega_s'+str(i+1)])
+		omega_d = float(request.form['omega_d'+str(i+1)])
+		omega_n = float(request.form['omega_n'+str(i+1)])
+		robots.append({'id': (i+1), 'pos_x': 0, 'pos_y': 0, 'heading': 0, 'kappa': kappa, 'omega_c': omega_c, 'omega_s': omega_s, 'omega_d': omega_d, 'omega_n': omega_n})
+
+	mission = Mission(t_mission, robots, regionFilename, simulation)
+
+	simulation.set_mission(mission)
+
+	return display_viz()
 
 # API requests
 @ns_config.route("/simlation")
