@@ -15,7 +15,7 @@ from mission import Mission
 flask_app = Flask(__name__)
 
 # Configuring polygon upload folder
-UPLOAD_FOLDER = './assets/uploads'
+UPLOAD_FOLDER = './assets/'
 flask_app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER
 
 # RESTful APis
