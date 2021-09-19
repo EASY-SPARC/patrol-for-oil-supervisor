@@ -8,16 +8,16 @@ from datetime import datetime, timedelta
 
 class WeatherConditions(object):
 
-    def __init__(self, interval):
+    def __init__(self, interval, north=-8.5, south=-11, east=-34, west=-36.5):
         self._timer     = None
         self.interval   = interval
         self.is_running = False
         
         # Coordinates limits
-        self.north = -8.5
-        self.south = -11
-        self.east = -34
-        self.west = -36.5
+        self.north = north
+        self.south = south
+        self.east = east
+        self.west = west
 
         # considering run step interval and 2 more days
         self.time_step = timedelta(seconds = interval) + timedelta(days = 2) 

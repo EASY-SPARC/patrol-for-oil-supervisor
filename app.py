@@ -1,6 +1,6 @@
 from flask import Flask, request, jsonify, make_response, Response
 from flask import render_template
-from flask_restplus import Api, Resource, fields
+from flask_restx import Api, Resource, fields
 
 from datetime import datetime, timedelta
 
@@ -138,7 +138,7 @@ def display_stoped():
 	robots = []
 
 	region = request.files['region']
-	regionFilename = os.path.join(flask_app.config['UPLOAD_FOLDER'], 'region.kml')
+	regionFilename = './assets/region.kml'
 	region.save(regionFilename)
 
 	for i in range(n_robots):

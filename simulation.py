@@ -39,7 +39,7 @@ class Simulation(object):
         self.mask = np.zeros((self.height, self.width))
 
         # Read ISL shape file
-        isl_shp = shapefile.Reader('./assets/shp/ISL.shp')
+        isl_shp = shapefile.Reader('./assets/shp/ISL.shp', encoding="ISO8859-1")
         isl_attr = np.array(isl_shp.records())[:, 0] # Gets only isl value
         isl_features = isl_shp.shapeRecords()
         self.isl = np.zeros((len(isl_attr) - len(np.where(isl_attr == 0)[0]), 3)) # [lon, lat, isl_value]

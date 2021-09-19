@@ -1,39 +1,77 @@
 # Web
-Werkzeug=0.16.0
-Flask=1.0.2
-Flask-Cors=3.0.7
-flask-restplus=0.12.1
-numpy
-shapely
-fastkml
-requests
+Werkzeug=2.0.1
+Flask=2.0.1
+Flask-Cors=3.0.10
+#flask-restplus=0.13.0
+flask-restx=0.5.1
+numpy=1.21.2
+shapely=1.7.1
+fastkml=0.11
+requests=2.26.0
 
 # pygnome
-setuptools>=23.0
+# Documents the conda packages required for PyGnome
+#  this covers py_gnome and the oil_library
+#  This should be the minimal conda install
+#  install with:
+#    conda install --file conda_requirements.txt
+#
+#  or create an environmemnt:
+#    conda create -n gnome --file conda_requirements.txt
+# These packages would all be in one of the following channels:
+# defaults
+# conda-forge
+# NOAA-ORR-ERD
+
+python=3.8.*
+
+# for SpatialRelease
+trimesh
+shapely
+pyproj
+mapbox_earcut # from NOAA_ORR_ERD channel -- not working
+
+setuptools
 gitpython
-numpy=1.16.*
-scipy>=0.18.*
-gsw=3.0.3
-psutil>=4.3
-progressbar>=2.3
-pyzmq>=16
-six>=1.10
-geojson>=1.3
-backports.functools_lru_cache>=1.5
-colander>=1.4
-tblib>=1.3.*
-awesome-slugify>=1.6.5
-regex
-unidecode>=0.04.19
-pyshp=1.2.12
-libnetcdf=4.6.1
-netCDF4=1.4.1
-cftime=1.0.*
-gridded=0.2.5
-pynucos>=2.8.*
-cell_tree2d>=0.3.*
-py_gd=0.1.* 
-cython=0.25.*
+scipy
+gsw
+psutil
+progressbar
+pyzmq
+geojson
+colander
+
+tblib # still needed for child process exception handling.
+
+netCDF4
+# awesome-slugify>=1.6.5
+# regex
+# unidecode>=0.04.19
+pyshp
+future  # while maintaining py2/3 compatibility
+
+
+# NOAA maintained packages
+gridded=0.3.0
+pynucos
+cell_tree2d
+py_gd>=1
+
+
+# required for building
+cython
+
+# needed to run tests
+pytest
+pytest-cov
+pytest-timeout
+testfixtures
+
+# Oil Library
+SQLAlchemy=1.3.15
 zope.sqlalchemy=1.1
-sqlalchemy=1.3.15
-future
+awesome-slugify
+backports.functools_lru_cache
+# The following needs to be manually downloaded
+#https://github.com/NOAA-ORR-ERD/PyNUCOS/archive/v2.5.5.tar.gz
+
