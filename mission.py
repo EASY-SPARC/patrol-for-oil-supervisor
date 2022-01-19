@@ -11,7 +11,7 @@ RES_GRID = 111.0    # Grid resolution (km in each cell)
 class Mission(object):
     def __init__(self, t_mission, robots, region, simulation):
         self.simulation = simulation
-
+        self.res_grid = RES_GRID
         self.robots = robots
 
         # --------------------- REMOVE ------------------------
@@ -26,17 +26,23 @@ class Mission(object):
         first = feature.shape.__geo_interface__
         shp = geometry.shape(first)
         al_coords = np.array(shp.geoms[3].exterior.coords)
-        # --------------------- REMOVE ------------------------
 
         # Read kml and extract coordinates
-        with open(region) as regionFile:
+        with open(region, 'rb') as regionFile:
             regionString = regionFile.read()
 
+        # print(regionString)
         regionKML = kml.KML()
         regionKML.from_string(regionString)
-        regionPolygon = list(list(list(regionKML.features())[0].features())[0].features())[0].geometry
+        placemarks = list(list(list(regionKML.features())[0].features())[0].features())
+        regionPolygon = placemarks[0].geometry
         (self.minLon, self.minLat, self.maxLon, self.maxLat) = regionPolygon.bounds
         self.coords = np.array(regionPolygon.exterior.coords)
+
+        # It may have inner cutoff polygons
+        innerPoly = []
+        for i in range(1, len(placemarks)):
+            innerPoly.append(placemarks[i].geometry)
 
         # Create grid maps based on region boundaries
         self.width = int(np.ceil(RES_GRID * (self.maxLon - self.minLon)))
@@ -48,12 +54,25 @@ class Mission(object):
         # Checking which cells are inside the region of interest polygon and calculating distance to nearest point in coast
         for i in range(self.width):
             for j in range(self.height):
-                if regionPolygon.intersects(geometry.Point((i/RES_GRID) + self.minLon, (j/RES_GRID) + self.minLat)) == False:
-                    self.mask[j, i] = 1
+                point_lon = (i/RES_GRID) + self.minLon
+                point_lat = (j/RES_GRID) + self.minLat
+                # Checking if point is outside permitted fly zone
+                # print(str(point_lon) + ', ' + str(point_lat) + ' -> ' + str(regionPolygon.intersects(geometry.Point(point_lon, point_lat))))
+                fly_zone_flag = True
+                if regionPolygon.intersects(geometry.Point(point_lon, point_lat)) == False:
+                    fly_zone_flag = False
                 else:
-                    dist = np.sqrt(((i/RES_GRID) + self.minLon - al_coords[:, 0])**2 + ((j/RES_GRID) + self.minLat - al_coords[:, 1])**2)
+                    for k in range(len(innerPoly)):
+                        if innerPoly[k].intersects(geometry.Point(point_lon, point_lat)) == True:
+                            fly_zone_flag = False
+                            break
+
+                if fly_zone_flag == True:
+                    dist = np.sqrt((point_lon - al_coords[:, 0])**2 + (point_lat - al_coords[:, 1])**2)
                     self.dist_grid[j, i] = RES_GRID * np.min(dist)
-        
+                else:
+                    self.mask[j, i] = 1
+      
         self.mask_idx = np.argwhere(self.mask.T == 0) # indexes of cells inside polygon
 
         # Normalizing Environmental Sensibility and applying region of interest mask
@@ -82,6 +101,8 @@ class Mission(object):
         # Computing kde with filtered particles
         self.kde = self._compute_kde(lonI, latI)
 
+        self.potential_field = self._compute_isl_pot_field(simulation.isl)
+
     def _compute_kde(self, lon, lat):
         print('Computing new KDE')
         kde = -1 * self.mask # No Fly Zones cells are -1 valued
@@ -105,15 +126,49 @@ class Mission(object):
             lonp = np.append(lonp, lon[idxs])
             latp = np.append(latp, lat[idxs])
 
-        f = gaussian_kde(np.vstack([lonp, latp]), bw_method=KDE_BW)
-        f_values = f.evaluate(positions).reshape(kde.shape)
-        kde = 5/np.max(f_values) * (1 - self.mask) * f_values * (h>0) + kde
+        if len(lonp) != 0:
+            f = gaussian_kde(np.vstack([lonp, latp]), bw_method=KDE_BW)
+            f_values = f.evaluate(positions).reshape(kde.shape)
+            kde = 5/np.max(f_values) * (1 - self.mask) * f_values * (h>0) + kde
+        else:
+            kde = -self.mask
         print('Computed new KDE')
 
         self.binX = binX
         self.binY = binY
 
         return kde
+
+    def _compute_isl_pot_field(self, isl):
+        # Filtering ISL
+        idx = np.where(isl[:, 1] >= self.minLat - 1)[0]
+        isl_filtered = isl[idx, :]
+
+        idx = np.where(isl_filtered[:, 1] <= self.maxLat + 1)[0]
+        isl_filtered = isl_filtered[idx, :]
+
+        # Gaussians ISL-centered as potential fields
+        sigma = 0.1
+        potential_field = np.zeros((self.height, self.width))
+        for potential in isl_filtered:
+            for i in range(self.width):
+                for j in range(self.height):
+                    curr_lon = (i/RES_GRID) + self.minLon
+                    curr_lat = (j/RES_GRID) + self.minLat
+
+                    lon_0 = potential[0]
+                    lat_0 = potential[1]
+                    Amp = potential[2]
+
+                    potential_field[j, i] += Amp * np.exp(-( \
+                        ((curr_lon - lon_0)**2)/(2 * sigma**2) + \
+                            ((curr_lat - lat_0)**2)/(2 * sigma**2) \
+                                ))
+        
+        max_potential = np.max(potential_field)
+        potential_field = 1/max_potential * 5 * (1 - self.mask) * potential_field - self.mask
+
+        return potential_field
 
     def _get_bins(self, lon, lat, xEdges, yEdges):
         binX = np.zeros(len(lon), dtype='int')
@@ -199,3 +254,7 @@ class Mission(object):
     def get_robots_weights(self):
         robots_weights = np.array([[robot['kappa'], robot['omega_c'], robot['omega_s'], robot['omega_d'], robot['omega_n']] for robot in self.robots])
         return robots_weights
+
+    def get_env_sensibility(self):
+        # return dist_grid # Alternative
+        return self.potential_field

@@ -138,7 +138,7 @@ def display_stoped():
 	robots = []
 
 	region = request.files['region']
-	regionFilename = './assets/region.kml'
+	regionFilename = './assets/region_2.kml'
 	region.save(regionFilename)
 
 	for i in range(n_robots):
@@ -275,10 +275,10 @@ class MainClass(Resource):
 		response.headers.add('Access-Control-Allow-Origin', '*')
 		return response
 
-@ns_simulation.route("/env_sensibility")
+@ns_mission.route("/env_sensibility")
 class MainClass(Resource):
 	def get(self):
-		env_sensibility = simulation.get_env_sensibility()
+		env_sensibility = mission.get_env_sensibility()
 		response = jsonify({
 				"statusCode": 200,
 				"env_sensibility": env_sensibility.tolist()
