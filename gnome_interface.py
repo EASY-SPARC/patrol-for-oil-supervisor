@@ -41,9 +41,15 @@ from gnome import utilities
 import netCDF4 as nc
 
 class GnomeInterface:
-    def __init__(self):
+    def __init__(self, north, south, east, west):
+
+        self.north = north
+        self.south = south
+        self.east = east
+        self.west = west
+
         base_dir = os.path.dirname(__file__)
-        self.mapfile = get_datafile(os.path.join(base_dir, './assets/alagoas-coast.bna'))
+        self.mapfile = get_datafile(os.path.join(base_dir, './assets/brazil-coast.bna'))
         self.gnome_map = MapFromBNA(self.mapfile, refloat_halflife=6)
         
         oil_name = 'GENERIC MEDIUM CRUDE'
@@ -98,7 +104,7 @@ class GnomeInterface:
             output_timestep=timedelta(minutes=5),
             draw_ontop='forecast')
         
-        renderer.viewport = ((-35.5, -9.5), (-34, -8.5)) #1/4 N alagoas
+        renderer.viewport = ((self.west, self.south), (self.east, self.north)) #1/4 N alagoas
         model.outputters += renderer
 
         netcdf_file = os.path.join(base_dir, './assets/step.nc')

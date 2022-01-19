@@ -116,7 +116,7 @@ def display_started():
 	weatherConditions.start()
 
 	if (simulation == None):
-		simulation = Simulation(t_g)
+		simulation = Simulation(t_g, north, south, east, west)
 	
 	simulation.start()
 

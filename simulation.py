@@ -11,26 +11,37 @@ KDE_BW = 0.2        # KDE Bandwidth
 RES_GRID = 111.0    # Grid resolution (km in each cell)
 
 class Simulation(object):
-    def __init__(self, interval):
+    def __init__(self, interval, north, south, east, west):
 
         self._timer     = None
         self.interval   = interval
         self.is_running = False
         self.mission    = None
 
+        self.north = north
+        self.south = south
+        self.east = east
+        self.west = west
+
         # Instance for gnome interface
-        self._gnome = GnomeInterface()
+        self._gnome = GnomeInterface(north, south, east, west)
 
         # Read kml and extract coordinates
         region = "./assets/region.kml"
-        with open(region) as regionFile:
+        with open(region, 'rb') as regionFile:
             regionString = regionFile.read()
 
         regionKML = kml.KML()
         regionKML.from_string(regionString)
-        regionPolygon = list(list(list(regionKML.features())[0].features())[0].features())[0].geometry
+        placemarks = list(list(list(regionKML.features())[0].features())[0].features())
+        regionPolygon = placemarks[0].geometry
         (self.minLon, self.minLat, self.maxLon, self.maxLat) = regionPolygon.bounds
         self.coords = np.array(regionPolygon.exterior.coords)
+
+        # It may have inner cutoff polygons
+        innerPoly = []
+        for i in range(1, len(placemarks)):
+            innerPoly.append(placemarks[i].geometry)
 
         # Create grid maps based on region boundaries
         self.width = int(np.ceil(RES_GRID * (self.maxLon - self.minLon)))
@@ -89,8 +100,13 @@ class Simulation(object):
         for i in range(self.width):
             for j in range(self.height):
                 if regionPolygon.intersects(geometry.Point((i/RES_GRID) + self.minLon, (j/RES_GRID) + self.minLat)) == False:
+                    # Point outside polygon
                     self.mask[j, i] = 1
-        
+                else:
+                    for k in range(len(innerPoly)):
+                        if innerPoly[k].intersects(geometry.Point((i/RES_GRID) + self.minLon, (j/RES_GRID) + self.minLat)) == True:
+                            # Point inside No-Fly Zone
+                            self.mask[j, i] = 1
         
         max_potential = np.max(self.potential_field)
         self.potential_field = 1/max_potential * 5 * (1 - self.mask) * self.potential_field - self.mask
