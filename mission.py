@@ -41,9 +41,11 @@ class Mission(object):
 
         # It may have inner cutoff polygons
         innerPoly = []
+        self.innerPolyCoords = []
         for i in range(1, len(placemarks)):
             innerPoly.append(placemarks[i].geometry)
-
+            self.innerPolyCoords.append(np.array(placemarks[i].geometry.exterior.coords).tolist())
+        
         # Create grid maps based on region boundaries
         self.width = int(np.ceil(RES_GRID * (self.maxLon - self.minLon)))
         self.height = int(np.ceil(RES_GRID * (self.maxLat - self.minLat)))
@@ -249,7 +251,7 @@ class Mission(object):
         return robots_heading
 
     def get_region(self):
-        return self.coords
+        return self.coords, self.innerPolyCoords
 
     def get_robots_weights(self):
         robots_weights = np.array([[robot['kappa'], robot['omega_c'], robot['omega_s'], robot['omega_d'], robot['omega_n']] for robot in self.robots])

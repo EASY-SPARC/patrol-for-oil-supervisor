@@ -85,12 +85,25 @@ function initMap() {
             url: 'http://127.0.0.1:5000/mission/region',
             success: function(data) {
 
+                var coords = []
                 var outerCoords = [];
                 for (var i = 0; i < data.region.length; i++) {
                     outerCoords.push({ lat: data.region[i][1], lng: data.region[i][0] });
                 }
 
-                polygon = new google.maps.Data.Polygon([outerCoords]);
+                coords.push(outerCoords)
+
+                if (data.innerRegions.length > 0) {
+                    for (var i = 0; i < data.innerRegions.length; i++) {
+                        var innerCoords = [];
+                        for (var j = 0; j < data.innerRegions[i].length; j++) {
+                            innerCoords.push({ lat: data.innerRegions[i][j][1], lng: data.innerRegions[i][j][0]})
+                        }
+                        coords.push(innerCoords)
+                    }
+                }
+                
+                polygon = new google.maps.Data.Polygon(coords);
 
                 region = map.data.add({
                     geometry: polygon

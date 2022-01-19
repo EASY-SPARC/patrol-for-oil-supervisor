@@ -343,10 +343,11 @@ class MainClass(Resource):
 @ns_mission.route('/region')
 class MainClass(Resource):
 	def get(self):
-		region = mission.get_region()
+		region, innerRegions = mission.get_region()
 		response = jsonify({
 				"statusCode": 200,
-				"region": region.tolist()
+				"region": region.tolist(),
+				"innerRegions": innerRegions
 			})
 		
 		response.headers.add('Access-Control-Allow-Origin', '*')
