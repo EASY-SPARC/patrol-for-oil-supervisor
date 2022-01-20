@@ -17,6 +17,13 @@
                     <input class="form-control" id="t_mission_input" name="t_mission" value="{{ t_mission }}">
                 </div>
                 <div class="mb-3">
+                    <label for="env_sensitivity_input" class="form-label">Environmental sensitivity</label>
+                    <select class="form-select" id="env_sensitivity_input" name="env_sensitivity_mode" value="{{ env_sensitivity_mode }}">
+                        <option value="0">ISL potential field</option>
+                        <option value="1">Distance to coast</option>
+                    </select>
+                </div>
+                <div class="mb-3">
                     <label for="n_robots_input" class="form-label">Number of vehicles</label>
                     <div class="input-group">
                         <input readonly type="text" name="n_robots" class="form-control" value="{{ robots|length }}" id="n_robots_input">

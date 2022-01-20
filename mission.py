@@ -9,10 +9,11 @@ KDE_BW = 0.2        # KDE Bandwidth
 RES_GRID = 111.0    # Grid resolution (km in each cell)
 
 class Mission(object):
-    def __init__(self, t_mission, robots, region, simulation):
+    def __init__(self, t_mission, robots, region, simulation, env_sensitivity_mode):
         self.simulation = simulation
         self.res_grid = RES_GRID
         self.robots = robots
+        self.env_sensitvity_mode = env_sensitivity_mode
 
         # Read shape file
         shpfile = shapefile.Reader('./assets/shp/BRA_admin_AL.shp')
@@ -275,5 +276,7 @@ class Mission(object):
         return robots_weights
 
     def get_env_sensibility(self):
-        # return dist_grid # Alternative
-        return self.potential_field
+        if self.env_sensitvity_mode == 0:
+            return self.potential_field
+        else:
+            return self.dist_grid

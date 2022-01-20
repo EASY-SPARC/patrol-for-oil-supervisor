@@ -3,27 +3,21 @@
 <script type="application/javascript" charset="utf-8" src="{{ url_for('static',filename='js/viz.js') }}"></script>
 <link rel="stylesheet" href="{{ url_for('static',filename='css/viz.css') }}" /> {% endblock %} {% block content %}
 
+<form id="config_mission_form" action="/config_mission" method="post"></form>
+
 <div class="container">
-    <div class="row">
-        <div class="col-md">
-            <button onclick="toggleParticles()" class="btn btn-primary btn-large"><i class="fas fa-tint"></i>&nbsp;Toggle Particles</button>
+    <div class="row mt-4">
+        <div class="btn-group" role="group">
+            <a href="#" onclick="toggleParticles()" class="btn btn-primary"><i class="fas fa-tint"></i>&nbsp;Toggle Particles</a>
+            <a href="#" onclick="toggleISL()" class="btn btn-primary"><i class="fas fa-map-marked-alt"></i>&nbsp;Toogle ISL</a>
+            {%+ if configured_mission %}
+            <a href="#" id="robots_button" onclick="toggleRobots()" class="btn btn-primary"><i class="fas fa-plane"></i>&nbsp;Toogle Robots</a>
+            <a href="#" onclick="toggleRegion()" class="btn btn-primary"><i class="fab fa-avianex"></i>&nbsp;Toogle Region of Interest</a>
+            {% endif %}
+            <a href="javascript:{}" onclick="document.getElementById('config_mission_form').submit();" class="btn btn-primary">{%+ if configured_mission %}<i class="fas fa-cogs"></i>&nbsp;Configure Mission{%+ else %}<i class="fas fa-plus-circle"></i>&nbsp;Create Mission{% endif %}</a>
         </div>
-        <div class="col-md">
-            <button onclick="toggleISL()" class="btn btn-primary btn-large"><i class="fas fa-map-marked-alt"></i>&nbsp;Toogle ISL</button>
-        </div>
-        {%+ if configured_mission %}
-        <div class="col-md">
-            <button id="robots_button" onclick="toggleRobots()" class="btn btn-primary btn-large"><i class="fas fa-plane"></i>&nbsp;Toogle Robots</button>
-        </div>
-        <div class="col-md">
-            <button onclick="toggleRegion()" class="btn btn-primary btn-large"><i class="fab fa-avianex"></i>&nbsp;Toogle Region of Interest</button>
-        </div>
-        {% endif %}
-        <form class="col-md" action="/config_mission" method="post">
-            <button class="btn btn-primary btn-large">{%+ if configured_mission %}<i class="fas fa-cogs"></i>&nbsp;Configure Mission{%+ else %}<i class="fas fa-plus-circle"></i>&nbsp;Create Mission{% endif %}</button>
-        </form>
     </div>
-    <div class="row" id="map" style="width: 100%; height: 800px"></div>
+    <div class="row mt-4 mb-4" id="map" style="width: 100%; height: 800px"></div>
 </div>
 {% endblock %} {% block endbody %}
 <!-- Async script executes immediately and must be after any DOM elements used in callback. -->

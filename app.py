@@ -71,6 +71,7 @@ west = -36.5
 t_mission = 0
 robots = []
 region = None
+env_sensitivity_mode = 0
 
 simulation = None
 weatherConditions = None
@@ -126,7 +127,7 @@ def display_started():
 def display_config_mission():
 
 	return render_template('config_mission.html', \
-		robots=robots, region=region, t_mission=t_mission)
+		robots=robots, region=region, t_mission=t_mission, env_sensitivity_mode=env_sensitivity_mode)
 
 @flask_app.route('/saved_mission', methods=['POST'])
 def display_stoped():
@@ -135,6 +136,7 @@ def display_stoped():
 
 	t_mission = float(request.form['t_mission'])
 	n_robots = int(request.form['n_robots'])
+	env_sensitivity_mode = int(request.form['env_sensitivity_mode'])
 	robots = []
 
 	region = request.files['region']
@@ -149,14 +151,14 @@ def display_stoped():
 		omega_n = float(request.form['omega_n'+str(i+1)])
 		robots.append({'id': (i+1), 'pos_x': 0, 'pos_y': 0, 'heading': 0, 'kappa': kappa, 'omega_c': omega_c, 'omega_s': omega_s, 'omega_d': omega_d, 'omega_n': omega_n})
 
-	mission = Mission(t_mission, robots, regionFilename, simulation)
+	mission = Mission(t_mission, robots, regionFilename, simulation, env_sensitivity_mode)
 
 	simulation.set_mission(mission)
 
 	return display_viz()
 
 # API requests
-@ns_config.route("/simlation")
+@ns_config.route("/simulation")
 class MainClass(Resource):
 	@app.expect(model_simul_conf)		
 	def post(self):
