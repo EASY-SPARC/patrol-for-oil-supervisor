@@ -14,12 +14,6 @@ class Mission(object):
         self.res_grid = RES_GRID
         self.robots = robots
 
-        # --------------------- REMOVE ------------------------
-        # Initializing robots positions in grid map
-        for robot in self.robots:
-            robot['pos_x'] = 1
-            robot['pos_y'] = 16
-
         # Read shape file
         shpfile = shapefile.Reader('./assets/shp/BRA_admin_AL.shp')
         feature = shpfile.shapeRecords()[0]
@@ -104,6 +98,29 @@ class Mission(object):
         self.kde = self._compute_kde(lonI, latI)
 
         self.potential_field = self._compute_isl_pot_field(simulation.isl)
+
+        # Initializing robots positions in grid map
+        found_flag = False
+        start_pos_x = 0
+        start_pos_y = 0
+        for i in range(self.width):            
+            for j in range(0, int(np.floor(self.height/2))):
+                if self.mask[int(self.height/2) + j, i] == 0:
+                    found_flag = True
+                    start_pos_x = i
+                    start_pos_y = int(self.height/2) + j
+                    break
+                elif self.mask[int(self.height/2) - j, i] == 0:
+                    found_flag = True
+                    start_pos_x = i
+                    start_pos_y = int(self.height/2) - j
+                    break
+            if found_flag == True:
+                break
+        
+        for robot in self.robots:
+            robot['pos_x'] = start_pos_x
+            robot['pos_y'] = start_pos_y
 
     def _compute_kde(self, lon, lat):
         print('Computing new KDE')

@@ -17,7 +17,7 @@ function initMap() {
 
     // Particles
     $.getJSON({
-        url: 'http://127.0.0.1:5000/simulation/particles/minLon:-35.3&maxLon:-34.9&minLat:-9.35&maxLat:-8.9',
+        url: 'http://127.0.0.1:5000/simulation/particles/minLon:-36&maxLon:-33&minLat:-4&maxLat:-9',
         success: function(data) {
 
             heatmap = new google.maps.visualization.HeatmapLayer({
@@ -182,7 +182,7 @@ function getPoints(particles) {
 function run() {
     // KDE
     $.getJSON({
-        url: 'http://127.0.0.1:5000/simulation/particles/minLon:-35.3&maxLon:-34.9&minLat:-9.35&maxLat:-8.9',
+        url: 'http://127.0.0.1:5000/simulation/particles/minLon:-36&maxLon:-33&minLat:-4&maxLat:-9',
         success: function(data) {
 
             particles_points = getPoints(data.particles);
