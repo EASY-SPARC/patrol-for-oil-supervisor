@@ -16,11 +16,13 @@ class Mission(object):
         self.env_sensitvity_mode = env_sensitivity_mode
 
         # Read shape file
-        shpfile = shapefile.Reader('./assets/shp/BRA_admin_AL.shp')
+        #shpfile = shapefile.Reader('./assets/shp/BRA_admin_AL.shp')
+        shpfile = shapefile.Reader('./assets/shp/BR_UF_2020.shp')
         feature = shpfile.shapeRecords()[0]
         first = feature.shape.__geo_interface__
         shp = geometry.shape(first)
-        al_coords = np.array(shp.geoms[3].exterior.coords)
+        #al_coords = np.array(shp.geoms[3].exterior.coords)
+        al_coords = np.array(shp.exterior.coords)
 
         # Read kml and extract coordinates
         with open(region, 'rb') as regionFile:
@@ -75,6 +77,7 @@ class Mission(object):
         # Normalizing Environmental Sensibility and applying region of interest mask
         max_dist = np.max(self.dist_grid)
         self.dist_grid = 1/max_dist * 5 * ((1 - self.mask) * max_dist - self.dist_grid) - self.mask
+        self.dist_grid *= 100
         
         # Filtering particles to square domain and saving its indexes for later use
         I1 = np.where(self.simulation.lon >= self.minLon)[0]

@@ -140,7 +140,7 @@ def display_stoped():
 	robots = []
 
 	region = request.files['region']
-	regionFilename = './assets/region_2.kml'
+	regionFilename = './assets/region.kml'
 	region.save(regionFilename)
 
 	for i in range(n_robots):

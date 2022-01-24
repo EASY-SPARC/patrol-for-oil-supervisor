@@ -1,16 +1,23 @@
 <?xml version="1.0" encoding="utf-8" ?>
 <kml xmlns="http://www.opengis.net/kml/2.2">
 <Document id="root_doc">
-<Schema name="region" id="region">
+<Schema name="region_2" id="region_2">
 	<SimpleField name="id" type="float"></SimpleField>
 </Schema>
-<Folder><name>region</name>
+<Folder><name>region_2</name>
   <Placemark>
 	<Style><LineStyle><color>ff0000ff</color></LineStyle><PolyStyle><fill>0</fill></PolyStyle></Style>
-	<ExtendedData><SchemaData schemaUrl="#region">
+	<ExtendedData><SchemaData schemaUrl="#region_2">
+		<SimpleData name="id">0</SimpleData>
+	</SchemaData></ExtendedData>
+      <Polygon><outerBoundaryIs><LinearRing><coordinates>-35.1671624885869,-5.55754544277142 -34.9858508853011,-5.54403153445197 -34.8676041875059,-5.7962911564149 -34.938552206183,-5.97535044164752 -35.0883313567235,-5.94043951182229 -35.1671624885869,-5.55754544277142</coordinates></LinearRing></outerBoundaryIs></Polygon>
+  </Placemark>
+  <Placemark>
+	<Style><LineStyle><color>ff0000ff</color></LineStyle><PolyStyle><fill>0</fill></PolyStyle></Style>
+	<ExtendedData><SchemaData schemaUrl="#region_2">
 		<SimpleData name="id">1</SimpleData>
 	</SchemaData></ExtendedData>
-      <Polygon><outerBoundaryIs><LinearRing><coordinates>-35.1484659956932,-8.92654289924274 -34.8947230993916,-9.02813343525328 -35.0571185530246,-9.33406750600041 -35.2844721881108,-9.19716460935913 -35.2134241771464,-9.02679690275355 -35.1484659956932,-8.98603028559121 -35.1484659956932,-8.92654289924274</coordinates></LinearRing></outerBoundaryIs></Polygon>
+      <Polygon><outerBoundaryIs><LinearRing><coordinates>-35.051168108845,-5.71070307039177 -34.9599492276888,-5.76025406756306 -35.0399065185788,-5.81994049597393 -35.051168108845,-5.71070307039177</coordinates></LinearRing></outerBoundaryIs></Polygon>
   </Placemark>
 </Folder>
 </Document></kml>
