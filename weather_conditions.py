@@ -23,7 +23,7 @@ class WeatherConditions(object):
         self.time_step = timedelta(seconds = interval) + timedelta(days = 2) 
 
         # First run
-        current_time = datetime.now() - timedelta(days = 1)
+        current_time = datetime.now().replace(hour=12, minute=0, second=0, microsecond=0) - timedelta(days = 1)
         end_time = current_time + self.time_step
 
         print('Getting currents weather data')
